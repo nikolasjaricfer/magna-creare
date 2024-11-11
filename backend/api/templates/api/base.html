@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}Your Site Title{% endblock %}</title>
+ 
+</head>
+<body>
+  <header>
+    
+    <nav>
+      <a href="{% url 'home' %}">Home</a>
+      {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" style="background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer;">Logout</button>
+        </form>
+        <span>Welcome, {{ user.username }}!</span>
+      {% else %}
+        <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'register' %}">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}
+    
+    {% endblock %}
+  </main>
+  <footer>
+    
+    <p></p>
+  </footer>
+ 
+</body>
+</html>
