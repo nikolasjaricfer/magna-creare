@@ -1,0 +1,61 @@
+.container{
+
+        display: flex;
+        text-align: center;
+        margin: auto;
+        margin-top: 100px;
+        width: 60vw;
+        background-color: white;
+        border-radius: 50px;
+}
+
+.hello{
+    font-size:2vw;
+}
+
+.goToHomePage{
+    margin: 1%;
+    width: 10vw;
+    height:2vw;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8vw;
+    border-radius: 50px;
+    color: white;
+    background-color:#a44ad5;
+    font-weight: 700;
+    cursor: pointer;
+
+}
+
+.icon{
+    height:6vw;
+    margin-bottom: 5%;  
+}
+
+.user_icon{
+    max-height: 100%;
+}
+
+.changeButton{
+    margin: 1%;
+    width: 10vw;
+    height:2vw;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8vw;
+    border-radius: 50px;
+    color: white;
+    background-color:#a44ad5;
+    font-weight: 700;
+    cursor: pointer;
+    
+}
+
+button:hover{
+    background-color: gray;
+}
+
+.buttonText{
+    font-size: 1rem;
+}
