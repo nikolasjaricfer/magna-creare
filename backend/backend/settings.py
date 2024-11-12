@@ -173,6 +173,14 @@ LOGOUT_REDIRECT_URL = '/'
 
 AUTH_USER_MODEL = 'api.User'
 
+
+
+LOGIN_URL = 'login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'home'  # Where to redirect after successful login
+LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout (if not specified in LogoutView)
+
+AUTH_USER_MODEL = 'api.User'
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
