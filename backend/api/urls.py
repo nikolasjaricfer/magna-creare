@@ -27,5 +27,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # For obtaining JWT
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # For refreshing JWT
-    path('accountManager/changePassword', ChangePasswordView.as_view(), name='change_password')
+    path('accountManager/changePassword/', ChangePasswordView.as_view(), name='change_password')
 ]

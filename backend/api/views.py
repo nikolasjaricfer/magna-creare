@@ -119,6 +119,9 @@ class RegisterView(generics.CreateAPIView):
     
 
 class ChangePasswordView(APIView):
+    """
+    API view to change password.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
