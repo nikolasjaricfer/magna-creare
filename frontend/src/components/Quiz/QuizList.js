@@ -25,7 +25,7 @@ const QuizList = () => {
             </button>
 
             {/* Logout button */}
-            <button id='logoutButton'onClick={logout} >
+            <button id='logoutButton' onClick={logout} >
                 Logout
             </button>
     </div>
