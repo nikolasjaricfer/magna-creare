@@ -1,0 +1,13 @@
+#changeButton{
+    cursor: pointer;
+    margin-top: 10px;
+    width: 15vw;
+    height: 3vw;
+    font-size: 1vw;
+}
+
+.pozdrav{
+    text-align: center;
+    font-size: 3vw;
+
+}
