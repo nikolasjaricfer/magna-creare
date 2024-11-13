@@ -21,13 +21,9 @@ const QuizList = () => {
     <div className='homeTop'>
         <h3 className='ime'>Quiz finder</h3>
             <button id='profileButton' onClick={() => navigate('/Profile')}>
-                <img src={user_icon} alt='user_icon'></img>
+                <img className='userImg' src={user_icon} alt='user_icon'></img>
             </button>
 
-            {/* Logout button */}
-            <button id='logoutButton' onClick={logout} >
-                Logout
-            </button>
     </div>
             <div className='kviz'>
                 
