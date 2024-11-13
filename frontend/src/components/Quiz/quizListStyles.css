@@ -1,0 +1,108 @@
+.homeTop{
+    display: flex;
+    align-items: center;
+    background-color: #531b70;
+    height: 8vw;
+}
+
+#profileButton{
+    background-color: white;
+    width: 8vw;
+    height: 4vw;
+    padding: 10px 15px;
+    cursor: pointer;
+    position: absolute;
+    right: 15vw;
+}
+
+#logoutButton{
+    background-color: white;
+    right: 6vw;
+    width: 7vw;   
+    color: black;
+    position: absolute;
+    height: 4vw;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 0.8vw;
+}
+
+#logoutButton:hover{
+    background-color: gray;
+}
+
+#profileButton:hover{
+    background-color: gray;
+}
+
+.ime{
+    font-size: 2vw;
+    color: white;
+    margin-left: 5%;
+
+}
+
+.navigacija{
+    border-radius: 10%;
+    background-color: #531b70;
+    width: 20%;
+    margin: 10px 15px;
+    height: 80vh;
+}
+
+.buttons{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
+}
+
+#navButtons{
+    margin-top: 10%;
+    width: 75%;
+    height: 3vw;
+    font-size: 1.5vw;
+}
+
+.kviz{
+    background-color: #ca76f7;
+    position: absolute;
+    width: 50%;
+    margin: 2% 25%;
+    border-radius: 5%;
+    height: 30%;
+}
+
+.nazivKviza{
+    position: absolute;
+    margin: 5% 40%;
+    font-size: 2vw;
+}
+
+.opisKviza{
+    position: absolute;
+    margin-left: 40% ;
+    margin-top: 10%;
+    width: 60%;
+    font-size: 1.3vw;
+}
+
+.slikaKviza{
+    width: 30%;
+    height: 60%;
+    background-color: white;
+    margin-top: 5%;
+    margin-left: 5%;
+}
+
+#prijaviSe{
+    width: 50%;
+    height: 30%;
+    position: relative;
+    margin-left: 20%;
+    margin-top: 30%;
+    font-size: 1.3vw;
+
+}
+
+
