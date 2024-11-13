@@ -8,6 +8,10 @@ const Profile = () => {
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
 
+    if (!isAuthenticated) {
+        navigate('/login');
+    }
+
     const [showUsernameForm, setShowUsernameForm] = useState(false);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [newUsername, setNewUsername] = useState('');
