@@ -29,6 +29,20 @@ ACCOUNT_USERNAME_REQUIRED = True
 REST_USE_JWT = True  # Use JWT tokens
 JWT_AUTH_COOKIE = 'my-app-auth'  # Example cookie name
 
+
+load_dotenv()
+
+SITE_ID = 1  # Ensure this matches your django.contrib.sites configuration
+
+# Allauth settings
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Adjust as needed
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+
+REST_USE_JWT = True  # Use JWT tokens
+JWT_AUTH_COOKIE = 'my-app-auth'  # Example cookie name
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -170,14 +184,6 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-
-AUTH_USER_MODEL = 'api.User'
-
-
-
-LOGIN_URL = 'login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'home'  # Where to redirect after successful login
-LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout (if not specified in LogoutView)
 
 AUTH_USER_MODEL = 'api.User'
 

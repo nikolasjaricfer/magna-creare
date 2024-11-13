@@ -5,6 +5,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
+from .serializers import CustomMicrosoftLoginSerializer
+
+
+
 from .models import (
     Quiz,
     Team,
@@ -24,7 +30,9 @@ from .serializers import (
 
 User = get_user_model()
 
-
+class CustomMicrosoftLoginView(SocialLoginView):
+    adapter_class = MicrosoftGraphOAuth2Adapter
+    serializer_class = CustomMicrosoftLoginSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     """
