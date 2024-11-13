@@ -1,63 +1,129 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, update_session_auth_hash
-from django.contrib import messages
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from .forms import UserRegisterForm
-from django.contrib.auth.decorators import login_required
+
+from rest_framework import viewsets, generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
+
+from .models import (
+    Quiz,
+    Team,
+    Review,
+    FavoriteOrganizer,
+    Notification,
+)
+from .serializers import (
+    UserSerializer,
+    UserRegisterSerializer,
+    QuizSerializer,
+    TeamSerializer,
+    ReviewSerializer,
+    FavoriteOrganizerSerializer,
+    NotificationSerializer,
+    ChangePasswordSerializer
+)
+
+User = get_user_model()
 
 
-
-@login_required
-def home(request):
-    return render(request, 'api/home.html')
-
-
-
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.role = form.cleaned_data['role']
-            user.save() 
-            login(request, user)
-            messages.success(request, f'Account created for {user.username}!')
-            return redirect('home')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'api/register.html', {'form': form})
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing user instances.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
 
-
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            messages.info(request, f'You are now logged in as {user.username}.')
-            return redirect('home')
-        else:
-            messages.error(request, 'Invalid username or password.')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'login.html', {'form': form})
+class QuizViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing quiz instances.
+    """
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-@login_required
-def account_page(request):
-    pass
+class TeamViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing team instances.
+    """
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated]
 
 
-@login_required
-def change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            return redirect('home')
-    else:
-        form = PasswordChangeForm(request.user)
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing review instances.
+    """
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated]
 
-    return render(request, 'api/password_change.html', {'form': form})
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class FavoriteOrganizerViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing favorite organizer instances.
+    """
+    queryset = FavoriteOrganizer.objects.all()
+    serializer_class = FavoriteOrganizerSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing notification instances.
+    """
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+
+class RegisterView(generics.CreateAPIView):
+    """
+    API view to register a new user.
+    """
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = UserRegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Generate JWT token manually
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # Prepare response data
+        response_data = {
+            'user': UserSerializer(user, context=self.get_serializer_context()).data,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+        }
+
+        return Response(response_data, status=201)
+    
+
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
