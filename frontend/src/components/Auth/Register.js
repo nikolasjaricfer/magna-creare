@@ -98,7 +98,7 @@ const Register = () => {
                     >
                         <option value="">Select Role</option>
                         <option value="user">User</option>
-                        <option value="QuizMaker">QuizMaker</option>
+                        <option value="quizmaker">QuizMaker</option>
                     </select>
                 </div>
                 <button type="submit">Register</button>
