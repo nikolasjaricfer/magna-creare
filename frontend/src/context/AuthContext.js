@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
 
 
     const refreshToken = async () => {
-        console.log("tich");
         const refreshToken = localStorage.getItem('refresh_token');
         try {
             const res = await api.post("/token/refresh/", {
