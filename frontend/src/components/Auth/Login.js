@@ -25,6 +25,7 @@ const Login = () => {
             const response = await api.post('/token/', { username, password });
             login(response.data); // Use login from AuthContext to set tokens and state
             navigate('/quiz');
+            localStorage.setItem('username', username);
         } catch (err) {
             setError(err.response?.data?.detail || 'Invalid credentials or server error');
         } finally {
