@@ -22,6 +22,8 @@ const Register = () => {
             return;
         }
 
+        localStorage.setItem('username', username);
+
         try {
             const response = await api.post('register/', {
                 username,
@@ -30,6 +32,8 @@ const Register = () => {
                 password2,
                 role,
             });
+
+            localStorage.setItem('role', role);
 
             // Call the login function with the token from registration response
             login({
@@ -98,7 +102,7 @@ const Register = () => {
                     >
                         <option value="">Select Role</option>
                         <option value="user">User</option>
-                        <option value="QuizMaker">QuizMaker</option>
+                        <option value="quizmaker">QuizMaker</option>
                     </select>
                 </div>
                 <button type="submit">Register</button>
