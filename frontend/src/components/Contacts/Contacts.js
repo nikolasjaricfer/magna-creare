@@ -26,8 +26,8 @@ const Contacts = () =>{
                 <p id='teamMember'> Matija Križević {'(matija.krizevic@fer.unizg.hr)'}</p>
                 <p id='teamMember'> Petar Krtalić {'(petar.krtalic@fer.unizg.hr)'}</p>
                 <p id='teamMember'> Ante Perić {'(ante.peric2@fer.unizg.hr)'}</p>
-                <p id='teamMember'> Ema Skoko {'(ema.skoko.jaric@fer.unizg.hr)'}</p>
-                <p id='teamMember'> Vice Sladoljev {'(vice.sladoljev.jaric@fer.unizg.hr)'}</p>
+                <p id='teamMember'> Ema Skoko {'(ema.skoko@fer.unizg.hr)'}</p>
+                <p id='teamMember'> Vice Sladoljev {'(vice.sladoljev@fer.unizg.hr)'}</p>
                 
             </div>
 
