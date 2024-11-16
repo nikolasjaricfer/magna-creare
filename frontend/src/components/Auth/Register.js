@@ -22,6 +22,8 @@ const Register = () => {
             return;
         }
 
+        localStorage.setItem('username', username);
+
         try {
             const response = await api.post('register/', {
                 username,
@@ -30,6 +32,9 @@ const Register = () => {
                 password2,
                 role,
             });
+
+            localStorage.setItem('role', role);
+            localStorage.setItem('id', response.data.user.id)
 
             // Call the login function with the token from registration response
             login({

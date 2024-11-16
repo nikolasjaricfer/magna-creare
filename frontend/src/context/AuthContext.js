@@ -10,45 +10,6 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('access_token'));
 
-    useEffect(() => {
-        auth().catch(() => setIsAuthenticated(false))
-    }, [])
-
-
-    const refreshToken = async () => {
-        const refreshToken = localStorage.getItem('refresh_token');
-        try {
-            const res = await api.post("/token/refresh/", {
-                refresh: refreshToken,
-            });
-            if (res.status === 200) {
-                localStorage.setItem('access_token', res.data.access)
-                setIsAuthenticated(true)
-            } else {
-                setIsAuthenticated(false)
-            }
-        } catch (error) {
-            console.log(error);
-            setIsAuthenticated(false);
-        }
-    };
-
-    const auth = async () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            setIsAuthenticated(false);
-            return;
-        }
-        const decoded = jwtDecode(token);
-        const tokenExpiration = decoded.exp;
-        const now = Date.now() / 1000;
-
-        if (tokenExpiration < now) {
-            await refreshToken();
-        } else {
-            setIsAuthenticated(true);
-        }
-    };
 
     const login = (token) => {
         localStorage.setItem('access_token', token.access);

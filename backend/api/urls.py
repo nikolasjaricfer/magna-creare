@@ -8,7 +8,8 @@ from .views import (
     FavoriteOrganizerViewSet,
     NotificationViewSet,
     RegisterView,
-    ChangePasswordView
+    ChangePasswordView,
+    CustomTokenObtainPairView
 )
 
 # Create a router and register viewsets with it
@@ -24,5 +25,6 @@ router.register(r'notifications', NotificationViewSet)
 urlpatterns = [
     path('', include(router.urls)),  # Include the router's URLs
     path('register/', RegisterView.as_view(), name='register'),
-    path('accountManager/changePassword/', ChangePasswordView.as_view(), name='change_password')
+    path('accountManager/changePassword/', ChangePasswordView.as_view(), name='change_password'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair')####
 ]

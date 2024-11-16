@@ -6,6 +6,7 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import QuizList from './components/Quiz/QuizList';
 import Profile from './components/Profile/Profile';
+import Contacts from './components/Contacts/Contacts';
 
 const App = () => {
     return (
@@ -17,6 +18,7 @@ const App = () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/quiz" element={<QuizList />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/contacts" element={<Contacts />} />
                 </Routes>
             </Router>
         </AuthProvider>

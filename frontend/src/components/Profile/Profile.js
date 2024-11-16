@@ -4,6 +4,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import api from '../../services/api';
 import './profileStyles.css';
 
+
 const Profile = () => {
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
