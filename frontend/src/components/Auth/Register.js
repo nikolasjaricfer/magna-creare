@@ -34,6 +34,7 @@ const Register = () => {
             });
 
             localStorage.setItem('role', role);
+            localStorage.setItem('id', response.data.user.id)
 
             // Call the login function with the token from registration response
             login({
