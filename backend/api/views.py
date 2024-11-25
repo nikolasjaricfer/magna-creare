@@ -6,6 +6,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 
+##
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
+from .serializers import CustomMicrosoftLoginSerializer
+from django.http import HttpResponseRedirect
+##
+
 from .models import (
     Quiz,
     Team,
@@ -37,8 +44,27 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-####
+###
 User = get_user_model()
+
+
+##
+class CustomMicrosoftLoginView(SocialLoginView):
+    adapter_class = MicrosoftGraphOAuth2Adapter
+    serializer_class = CustomMicrosoftLoginSerializer
+
+    def get_response(self):
+        response = super().get_response()
+        user = self.request.user
+        access_token = response.data.get('access_token')
+        refresh_token = response.data.get('refresh_token')
+
+        # Customize redirect URL to include token  
+        frontend_url = f"http://localhost:3000/login?access_token={access_token}&refresh_token={refresh_token}" 
+        # tu treba umjesto register stavit neku drugu stranicu koja ce primit tokene, provjerit jesu li postavljeni username i uloga i onda ce se otic na /quiz
+        #frontend_url = f"http://localhost:8000/auth/social/callback/microsoft/?access_token={access_token}&refresh_token={refresh_token}"
+        return HttpResponseRedirect(frontend_url)
+##
 
 
 class UserViewSet(viewsets.ModelViewSet):

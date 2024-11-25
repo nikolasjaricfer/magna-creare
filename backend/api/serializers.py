@@ -3,6 +3,25 @@ from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
+##
+from dj_rest_auth.registration.serializers import SocialLoginSerializer
+
+class CustomMicrosoftLoginSerializer(SocialLoginSerializer):
+    username = serializers.CharField(required=True)
+    role = serializers.ChoiceField(choices=[
+        ('user', 'User'),
+        ('quizmaker', 'Quiz Maker'),
+    ], required=True)
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        return data
+
+    def save(self, request):
+        return super().save(request)
+
+##
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

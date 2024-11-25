@@ -1,8 +1,8 @@
 // src/components/Auth/Login.js
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import './authStyles.css';
 import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 const Login = () => {
@@ -12,6 +12,30 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { login } = useContext(AuthContext); // Get login function from AuthContext
+
+    const [accessToken, setAccessToken] = useState('');
+    const [refreshToken, setRefreshToken] = useState('');
+    const location = useLocation(); // Dobijate trenutni URL
+    
+    useEffect(() => {
+        // Izvlačenje parametara iz URL-a
+        const queryParams = new URLSearchParams(location.search);
+
+        const access = queryParams.get('access_token');
+        const refresh = queryParams.get('refresh_token');
+
+        if (access && refresh) {
+            setAccessToken(access);
+            setRefreshToken(refresh);
+
+            // Opcionalno: sačuvajte u localStorage ili u AuthContext
+            localStorage.setItem('access_token', access);
+            localStorage.setItem('refresh_token', refresh);
+            navigate('/quiz');
+        } else {
+            setError('Missing tokens. Please try again.');
+        }
+    }, [location]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
