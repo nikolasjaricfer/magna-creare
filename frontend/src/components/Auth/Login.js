@@ -16,26 +16,6 @@ const Login = () => {
     const [accessToken, setAccessToken] = useState('');
     const [refreshToken, setRefreshToken] = useState('');
     const location = useLocation(); // Dobijate trenutni URL
-    
-    useEffect(() => {
-        // Izvlačenje parametara iz URL-a
-        const queryParams = new URLSearchParams(location.search);
-
-        const access = queryParams.get('access_token');
-        const refresh = queryParams.get('refresh_token');
-
-        if (access && refresh) {
-            setAccessToken(access);
-            setRefreshToken(refresh);
-
-            // Opcionalno: sačuvajte u localStorage ili u AuthContext
-            localStorage.setItem('access_token', access);
-            localStorage.setItem('refresh_token', refresh);
-            navigate('/quiz');
-        } else {
-            setError('Missing tokens. Please try again.');
-        }
-    }, [location]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
