@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
@@ -6,20 +5,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-=======
-# api/views.py
-
-from rest_framework import viewsets, generics, permissions
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
-from dj_rest_auth.registration.views import SocialLoginView
-from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
-from .serializers import CustomMicrosoftLoginSerializer
-
-
->>>>>>> testing/testing/feature/Backend/OAuth2
 
 from .models import (
     Quiz,
@@ -35,7 +20,6 @@ from .serializers import (
     TeamSerializer,
     ReviewSerializer,
     FavoriteOrganizerSerializer,
-<<<<<<< HEAD
     NotificationSerializer,
     ChangePasswordSerializer
 )
@@ -53,19 +37,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-####
+###
 User = get_user_model()
 
-=======
-    NotificationSerializer
-)
-
-User = get_user_model()
-
-class CustomMicrosoftLoginView(SocialLoginView):
-    adapter_class = MicrosoftGraphOAuth2Adapter
-    serializer_class = CustomMicrosoftLoginSerializer
->>>>>>> testing/testing/feature/Backend/OAuth2
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -156,7 +130,6 @@ class RegisterView(generics.CreateAPIView):
         }
 
         return Response(response_data, status=201)
-<<<<<<< HEAD
     
 
 class ChangePasswordView(APIView):
@@ -171,5 +144,3 @@ class ChangePasswordView(APIView):
             serializer.save()
             return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-=======
->>>>>>> testing/testing/feature/Backend/OAuth2

@@ -24,6 +24,7 @@ const Register = () => {
 
         localStorage.setItem('username', username);
 
+
         try {
             const response = await api.post('register/', {
                 username,
@@ -35,6 +36,7 @@ const Register = () => {
 
             localStorage.setItem('role', role);
             localStorage.setItem('id', response.data.user.id)
+
 
             // Call the login function with the token from registration response
             login({
@@ -48,6 +50,7 @@ const Register = () => {
             setError(err.response?.data?.detail || 'An error occurred');
         }
     };
+
 
     return (
         <div className='container'>
@@ -99,7 +102,8 @@ const Register = () => {
                     <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        required>
+                        required
+                    >
                         <option value="">Select Role</option>
                         <option value="user">User</option>
                         <option value="quizmaker">QuizMaker</option>
@@ -107,7 +111,6 @@ const Register = () => {
                 </div>
                 <button type="submit">Register</button>
             </form>
-
             <p>
                 Already have an account? <Link to="/login">Login here</Link>
             </p>

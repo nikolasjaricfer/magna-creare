@@ -1,9 +1,5 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
-import {jwtDecode} from "jwt-decode"
-import api from "../services/api";
-
-
 
 export const AuthContext = createContext();
 
@@ -29,5 +25,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
-export default AuthProvider;
