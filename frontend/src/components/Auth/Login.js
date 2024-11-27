@@ -1,8 +1,8 @@
 // src/components/Auth/Login.js
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import './authStyles.css';
 import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 
 const Login = () => {
@@ -12,6 +12,10 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { login } = useContext(AuthContext); // Get login function from AuthContext
+
+    const [accessToken, setAccessToken] = useState('');
+    const [refreshToken, setRefreshToken] = useState('');
+    const location = useLocation(); // Dobijate trenutni URL
 
     const handleSubmit = async (e) => {
         e.preventDefault();

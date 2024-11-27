@@ -18,6 +18,7 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
+##
 SITE_ID = 1  # Ensure this matches your django.contrib.sites configuration
 
 # Allauth settings
@@ -42,6 +43,7 @@ ACCOUNT_USERNAME_REQUIRED = True
 
 REST_USE_JWT = True  # Use JWT tokens
 JWT_AUTH_COOKIE = 'my-app-auth'  # Example cookie name
+##
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -50,7 +52,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+#SECRET_KEY = "django-insecure-nma=xi6x2p-crjg^ifqqkapyu1qjd0l=+wn)-rijk_o%$!k3w_" ovo je bilo prije secret key, ispod je noviji
+
+##
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
+##
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,8 +66,9 @@ ALLOWED_HOSTS = ["*"]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        'rest_framework.authentication.SessionAuthentication', ##
+        'rest_framework.authentication.TokenAuthentication', ## 
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -85,13 +93,14 @@ INSTALLED_APPS = [
     "api",
     "rest_framework",
     "corsheaders",
-    'rest_framework.authtoken',
+    "oauth2_provider",
+    'rest_framework.authtoken', ##
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.microsoft',
+    'allauth.socialaccount.providers.microsoft', ##
 ]
 
 MIDDLEWARE = [
@@ -103,7 +112,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "allauth.account.middleware.AccountMiddleware", ##
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -158,6 +168,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+##
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # Default
     'allauth.account.auth_backends.AuthenticationBackend',  # For django-allauth
@@ -181,17 +192,11 @@ SOCIALACCOUNT_PROVIDERS = {
         'VERSION': 'v2.0',
     }
 }
+##
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
-
-AUTH_USER_MODEL = 'api.User'
-
-
-
-LOGIN_URL = 'login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'home'  # Where to redirect after successful login
-LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout (if not specified in LogoutView)
+LOGIN_URL = 'http://localhost:3000/login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'http://localhost:3000/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
+LOGOUT_REDIRECT_URL = 'http://localhost:3000/login'  # Where to redirect after logout (if not specified in LogoutView)
 
 AUTH_USER_MODEL = 'api.User'
 
