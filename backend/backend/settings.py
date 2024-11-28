@@ -60,7 +60,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ##
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -205,9 +205,9 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 ##
 
-LOGIN_URL = 'https://quiz-finder.onrender.com/login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'https://quiz-finder.onrender.com/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
-LOGOUT_REDIRECT_URL = 'https://quiz-finder.onrender.com/login'  # Where to redirect after logout (if not specified in LogoutView)
+LOGIN_URL = 'https://quizfinder.onrender.com/login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'https://quizfinder.onrender.com/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
+LOGOUT_REDIRECT_URL = 'https://quizfinder.onrender.com/login'  # Where to redirect after logout (if not specified in LogoutView)
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -238,4 +238,5 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://quizfinder.onrender.com",
     "http://localhost:3000",  # Ako koristiš lokalni frontend za testiranje
+    "https://quiz-finder.onrender.com",
 ]
