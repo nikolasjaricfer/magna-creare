@@ -205,9 +205,9 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 ##
 
-LOGIN_URL = 'http://localhost:3000/login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'http://localhost:3000/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
-LOGOUT_REDIRECT_URL = 'http://localhost:3000/login'  # Where to redirect after logout (if not specified in LogoutView)
+LOGIN_URL = 'https://quiz-finder.onrender.com/login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'https://quiz-finder.onrender.com/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
+LOGOUT_REDIRECT_URL = 'https://quiz-finder.onrender.com/login'  # Where to redirect after logout (if not specified in LogoutView)
 
 AUTH_USER_MODEL = 'api.User'
 
