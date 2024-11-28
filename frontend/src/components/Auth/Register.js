@@ -51,7 +51,7 @@ const Register = () => {
     const handleMicrosoftLogin = async(e)=>{
 
         //navigate('/auth/microsoft/login');
-        window.location.assign('http://localhost:8000/auth/microsoft/login/');
+        window.location.assign('https://quizfinder.onrender.com/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         return false;
 
