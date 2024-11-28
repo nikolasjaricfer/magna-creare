@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/', // Change to your Django API URL
+    //baseURL: 'http://localhost:8000/',  // Change to your Django API URL
+    baseURL: 'https://quizfinder.onrender.com/',
 });
 
 // Add authorization headers if the user is authenticated
