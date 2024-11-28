@@ -1,7 +1,27 @@
+<<<<<<< HEAD
 from rest_framework import serializers
 from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+
+##
+from dj_rest_auth.registration.serializers import SocialLoginSerializer
+
+class CustomMicrosoftLoginSerializer(SocialLoginSerializer):
+    username = serializers.CharField(required=True)
+    role = serializers.ChoiceField(choices=[
+        ('user', 'User'),
+        ('quizmaker', 'Quiz Maker'),
+    ], required=True)
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        return data
+
+    def save(self, request):
+        return super().save(request)
+
+##
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -53,6 +73,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
+<<<<<<< HEAD
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -68,3 +89,5 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
+=======
+>>>>>>> testing/testing/feature/Backend/OAuth2

@@ -1,6 +1,9 @@
+<<<<<<< HEAD
+=======
 # magna-creare
 Magna Creare is a team of young developers making a Quiz Finder application that helps people find or organize pub quizzes..
 
+>>>>>>> dfc388c32123950690dee1caa0e41345205251fc
 # Programsko inženjerstvo
 
 > Quiz Finder je full-stack web aplikacija koja omogućava korisnicima da pronađu i sudjeluju u pub kvizovima. Aplikacija omogućava različite uloge korisnika—organizatora, sudionika, administratora i neregistriranih korisnika koji mogu samo pregledavati kvizove. Također integrira Google Maps API za prikazivanje lokacija kvizova.

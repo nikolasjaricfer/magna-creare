@@ -24,7 +24,6 @@ const Register = () => {
 
         localStorage.setItem('username', username);
 
-
         try {
             const response = await api.post('register/', {
                 username,
@@ -35,8 +34,6 @@ const Register = () => {
             });
 
             localStorage.setItem('role', role);
-            localStorage.setItem('id', response.data.user.id)
-
 
             // Call the login function with the token from registration response
             login({
@@ -50,6 +47,17 @@ const Register = () => {
             setError(err.response?.data?.detail || 'An error occurred');
         }
     };
+
+    const handleMicrosoftLogin = async(e)=>{
+
+        //navigate('/auth/microsoft/login');
+        window.location.assign('http://localhost:8000/auth/microsoft/login/');
+        //window.location.assign('http://localhost:8000/auth/microsoft/login/');
+        return false;
+
+
+        //const response = await api.post('auth/microsoft/login/')
+    }
 
 
     return (
@@ -102,8 +110,7 @@ const Register = () => {
                     <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        required
-                    >
+                        required>
                         <option value="">Select Role</option>
                         <option value="user">User</option>
                         <option value="quizmaker">QuizMaker</option>
@@ -111,6 +118,7 @@ const Register = () => {
                 </div>
                 <button type="submit">Register</button>
             </form>
+            <button id="googleButton" onClick={handleMicrosoftLogin}>Register with google</button>
             <p>
                 Already have an account? <Link to="/login">Login here</Link>
             </p>
