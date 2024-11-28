@@ -8,3 +8,6 @@ pytz
 sqlparse
 psycopg2-binary
 python-dotenv
+django-oauth-toolkit
+dj-rest-auth
+django-allauth
