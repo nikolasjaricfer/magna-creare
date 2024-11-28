@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 from rest_framework import serializers
 from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
 from django.contrib.auth import get_user_model
@@ -73,7 +73,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
 
-<<<<<<< HEAD
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -89,5 +88,4 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
-=======
->>>>>>> testing/testing/feature/Backend/OAuth2
+

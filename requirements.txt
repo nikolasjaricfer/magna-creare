@@ -11,3 +11,6 @@ python-dotenv
 django-oauth-toolkit
 dj-rest-auth
 django-allauth
+gunicorn 
+whitenoise 
+packaging 
