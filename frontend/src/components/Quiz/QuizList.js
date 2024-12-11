@@ -1,9 +1,10 @@
 // src/components/Quiz/QuizList.js
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import user_icon from './user_icon.png'
 import './quizListStyles.css'
+import './quizStyles.css'
 import api from '../../services/api';
 
 
@@ -30,9 +31,32 @@ const QuizList = () => {
 
     const [error, setError] = useState(null);
 
+    const [quizzes, setQuizzes] = useState([]);
+
     if (!isAuthenticated) {
-        return <Navigate to="/login" />;
+        localStorage.clear();
+        logout();
+        //return <Navigate to="/login" />;
     }
+
+    useEffect(() => {
+        const fetchQuizzes = async () => {
+            try {
+                const response = await api.get('quizzes/');
+                
+                const now = new Date();
+                const filteredQuizzes = response.data.filter(quiz => 
+                    new Date(quiz.registration_deadline) >= now
+                  );
+                
+                setQuizzes(filteredQuizzes); // Postavljamo kvizove u stanje
+            } catch (err) {
+                setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+            }
+        };
+    
+        fetchQuizzes(); 
+    }, []);
 
     const userRole = localStorage.getItem('role');
 
@@ -64,7 +88,6 @@ const QuizList = () => {
     };
 
 
-
     return (
         <div>
 
@@ -79,18 +102,28 @@ const QuizList = () => {
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {!showQuizPopup && 
         
-            <div className='quizes'>
-                    <div className='kviz'>
-                        
-                        <div className='nazivKviza'>Ime kviza</div>
-                        <div className='opisKviza'> 
-                            <p className='opis'> Kafic xyz, adresa abc, kotizacija, bla bla bla bla</p>
+            <div className='quizzes'>
+                {quizzes.map((quiz) => (
+                    <div className='kviz' key={quiz.id}>
+                        <div className='nazivKviza'>{quiz.title}</div>
+                        <div className='opisKviza'>
+                            <p className='opis'>{quiz.description}</p>
+                        </div>
+                        <div className='informacije'>
+                            <p>Kategorija: {quiz.category}</p>
+                            <p>Težina: {quiz.difficulty}</p>
+                            <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
+                            <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                            
+                        </div>
+                        <div className='prijava'>
+                            <button id='prijaviSe'>
+                                Prijavi se
+                            </button>
                         </div>
                         
-                        <div className='slikaKviza'> *insert sliku kviza
-                            <button id='prijaviSe'> Prijavi se</button>
-                        </div>
                     </div>
+                ))}
 
             </div>
         }
