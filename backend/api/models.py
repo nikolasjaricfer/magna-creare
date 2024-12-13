@@ -31,9 +31,15 @@ class Role(models.Model):
         return self.role_name
 
 class Quiz(models.Model):
+    CATEGORY_CHOICES = [
+        ('general_knowledge', 'General Knowledge'),
+        ('music', 'Music'),
+        ('sports', 'Sports'),
+        ('other', 'Other'),
+    ]
     title = models.CharField(max_length=100)
     description = models.TextField()
-    category = models.CharField(max_length=50)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='general_knowledge')
     difficulty = models.CharField(max_length=20, choices=[('Easy', 'Easy'), ('Medium', 'Medium'), ('Hard', 'Hard')])
     location = models.CharField(max_length=255)
     max_teams = models.IntegerField()
@@ -45,6 +51,7 @@ class Quiz(models.Model):
     prizes = models.TextField(blank=True)
     start_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
+    max_team_members = models.IntegerField(default=4)
 
     def __str__(self):
         return self.title
@@ -54,6 +61,7 @@ class Team(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='teams')
     registered_by = models.ForeignKey('User', on_delete=models.CASCADE, related_name='teams')
     created_at = models.DateTimeField(auto_now_add=True)
+    members_count = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name

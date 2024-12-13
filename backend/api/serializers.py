@@ -49,14 +49,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'role']
 
 class QuizSerializer(serializers.ModelSerializer):
+    organizer = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Quiz
         fields = '__all__'
+        read_only_fields = ['organizer', 'created_at']
 
 class TeamSerializer(serializers.ModelSerializer):
+    registered_by = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Team
         fields = '__all__'
+        read_only_fields = ['registered_by', 'created_at']
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
