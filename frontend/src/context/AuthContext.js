@@ -16,6 +16,9 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('id');
+        localStorage.removeItem('role');
+        localStorage.removeItem('username');
         setIsAuthenticated(false); // Update state, triggering re-renders
     };
 
