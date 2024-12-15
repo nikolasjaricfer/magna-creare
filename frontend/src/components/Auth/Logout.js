@@ -8,6 +8,7 @@ const Logout = () => {
         // Remove the tokens from localStorage
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.clear();
 
         // Redirect to login page
         navigate('/login');
