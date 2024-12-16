@@ -17,24 +17,30 @@ const RegComplete = () =>{
     const { login } = useContext(AuthContext); // Access the login function from AuthContext
 
     useEffect(() => {
-        const hash = window.location.hash;
-        const params = new URLSearchParams(hash.substring(1)); // Remove '#' and parse query
-        const idToken = params.get('id_token');
-
-        if (idToken) {
-            try {
-                const decoded = jwtDecode(idToken);
-                setUsername(decoded.name || decoded.preferred_username || ''); // Extract username
-                setUsername(username.replace(/[\s\t\n\r]+/g, ''))
-                setEmail(decoded.email || ''); // Extract email if available
-                //console.log(username)
-                //console.log(email)
-            } catch (err) {
-                console.error('Invalid token:', err);
-                setError('Failed to decode token');
+            const hash = window.location.hash;
+            const params = new URLSearchParams(hash.substring(1)); // Parsiraj hash
+            const idToken = params.get('id_token');
+        
+            if (idToken) {
+                try {
+                    const decoded = jwtDecode(idToken);
+                    console.log("Decoded Token:", decoded);
+        
+                    // Čistimo i postavljamo vrednosti
+                    const name = (decoded.name || decoded.preferred_username || '').trim();
+                    const email = (decoded.email || '').trim();
+        
+                    console.log("Extracted Name:", name);
+                    console.log("Extracted Email:", email);
+        
+                    setUsername(name.replace(/[\s\t\n\r]+/g, ''));
+                    setEmail(email);
+                } catch (err) {
+                    console.error('Invalid token:', err);
+                    setError('Failed to decode token');
+                }
             }
-        }
-    }, []);
+        }, []); // Prazan niz zavisnosti
 
     const handleSubmit = async (e) => {
         e.preventDefault();

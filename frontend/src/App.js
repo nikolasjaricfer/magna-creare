@@ -8,6 +8,7 @@ import QuizList from './components/Quiz/QuizList';
 import Profile from './components/Profile/Profile';
 import Contacts from './components/Contacts/Contacts';
 import RegComplete from './components/Auth/RegComplete';
+import LogComplete from './components/Auth/LogComplete';
 
 const App = () => {
     return (
@@ -21,6 +22,7 @@ const App = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/regComplete" element={<RegComplete />} />
+                    <Route path="/logComplete" element={<LogComplete />} />
                 </Routes>
             </Router>
         </AuthProvider>
