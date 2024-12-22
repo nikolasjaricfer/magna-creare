@@ -14,7 +14,9 @@ from .views import (
     RegisterView,
     ChangePasswordView,
     CustomTokenObtainPairView,
-    CustomMicrosoftLoginView
+    CustomMicrosoftLoginView,
+    SearchView,
+    LocationViewSet
 )
 
 # Create a router and register viewsets with it
@@ -25,6 +27,7 @@ router.register(r'teams', TeamViewSet)
 router.register(r'reviews', ReviewViewSet)
 router.register(r'favorites', FavoriteOrganizerViewSet)
 router.register(r'notifications', NotificationViewSet)
+router.register(r'locations', LocationViewSet)
 
 # Define URL patterns
 urlpatterns = [
@@ -37,5 +40,5 @@ urlpatterns = [
     path('auth/social/login/microsoft/', CustomMicrosoftLoginView.as_view(), name='microsoft_login'),
     #path('auth/microsoft/login/', CustomMicrosoftLoginView.as_view(), name='microsoft_login'),## moje
     path('auth/social/callback/microsoft/', CustomMicrosoftLoginView.as_view(), name='microsoft_callback'),##
-
+    path('search/', SearchView.as_view(), name='search'),
 ]
