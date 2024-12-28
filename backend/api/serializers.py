@@ -1,5 +1,6 @@
+
 from rest_framework import serializers
-from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
+from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification, Location
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -46,16 +47,27 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'role']
+        read_only_fields = ['id']
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ['id', 'name', 'address', 'latitude', 'longitude', 'place_id']
 
 class QuizSerializer(serializers.ModelSerializer):
+    organizer = serializers.PrimaryKeyRelatedField(read_only=True)
+    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
     class Meta:
         model = Quiz
         fields = '__all__'
+        read_only_fields = ['organizer', 'created_at']
 
 class TeamSerializer(serializers.ModelSerializer):
+    registered_by = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Team
         fields = '__all__'
+        read_only_fields = ['registered_by', 'created_at']
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,3 +99,4 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
+

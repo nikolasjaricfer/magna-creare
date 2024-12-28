@@ -30,12 +30,29 @@ class Role(models.Model):
     def __str__(self):
         return self.role_name
 
+
+class Location(models.Model):
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=500, blank=True, null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    place_id = models.CharField(max_length=100, unique=True, blank=True, null=True)  # For Google Maps
+    
+    def __str__(self):
+        return self.name
+
 class Quiz(models.Model):
+    CATEGORY_CHOICES = [
+        ('general_knowledge', 'General Knowledge'),
+        ('music', 'Music'),
+        ('sports', 'Sports'),
+        ('other', 'Other'),
+    ]
     title = models.CharField(max_length=100)
     description = models.TextField()
-    category = models.CharField(max_length=50)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='general_knowledge')
     difficulty = models.CharField(max_length=20, choices=[('Easy', 'Easy'), ('Medium', 'Medium'), ('Hard', 'Hard')])
-    location = models.CharField(max_length=255)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='quizzes')
     max_teams = models.IntegerField()
     registration_deadline = models.DateTimeField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
@@ -45,6 +62,7 @@ class Quiz(models.Model):
     prizes = models.TextField(blank=True)
     start_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
+    max_team_members = models.IntegerField(default=4)
 
     def __str__(self):
         return self.title
@@ -54,6 +72,7 @@ class Team(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='teams')
     registered_by = models.ForeignKey('User', on_delete=models.CASCADE, related_name='teams')
     created_at = models.DateTimeField(auto_now_add=True)
+    members_count = models.IntegerField(default=1)
 
     def __str__(self):
         return self.name

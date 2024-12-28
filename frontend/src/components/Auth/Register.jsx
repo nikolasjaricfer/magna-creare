@@ -61,6 +61,7 @@ const Register = () => {
         };
 
         //navigate('/auth/microsoft/login');
+        window.location.assign('https://quizfinder.onrender.com/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
@@ -128,8 +129,7 @@ const Register = () => {
                     <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        required
-                    >
+                        required>
                         <option value="">Select Role</option>
                         <option value="user">User</option>
                         <option value="quizmaker">QuizMaker</option>
