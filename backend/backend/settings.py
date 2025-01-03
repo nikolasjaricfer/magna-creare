@@ -15,11 +15,38 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 
+# Load environment variables from .env file
 load_dotenv()
+
+##
+SITE_ID = 1  # Ensure this matches your django.contrib.sites configuration
+
+# Allauth settings
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Adjust as needed
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+
+REST_USE_JWT = True  # Use JWT tokens
+JWT_AUTH_COOKIE = 'my-app-auth'  # Example cookie name
+
+
+load_dotenv()
+
+SITE_ID = 1  # Ensure this matches your django.contrib.sites configuration
+
+# Allauth settings
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Adjust as needed
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+
+REST_USE_JWT = True  # Use JWT tokens
+JWT_AUTH_COOKIE = 'my-app-auth'  # Example cookie name
+##
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -31,7 +58,7 @@ SECRET_KEY = "django-insecure-nma=xi6x2p-crjg^ifqqkapyu1qjd0l=+wn)-rijk_o%$!k3w_
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -58,6 +85,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
     "api",
     "rest_framework",
     "corsheaders",
@@ -74,13 +102,16 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
+    "allauth.account.middleware.AccountMiddleware", ##
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -93,7 +124,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
-                "django.template.context_processors.request",
+                "django.template.context_processors.request",  # Required by allauth
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
@@ -101,8 +132,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
+STORAGES = {
+    # ...
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -117,7 +156,6 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -137,10 +175,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+##
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # Default
+    'allauth.account.auth_backends.AuthenticationBackend',  # For django-allauth
+)
 
-LOGIN_URL = 'login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'home'  # Where to redirect after successful login
-LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout (if not specified in LogoutView)
+SOCIALACCOUNT_PROVIDERS = {
+    'microsoft': {
+        'APP': {
+            'client_id': os.getenv('MS_CLIENT_ID'),
+            'secret': os.getenv('MS_CLIENT_SECRET'),
+            'key': ''
+        },
+        'SCOPE': [
+            'User.Read',
+            # Add other scopes as needed
+        ],
+        'AUTH_PARAMS': {
+            'response_type': 'code',
+        },
+        'METHOD': 'oauth2',
+        'VERSION': 'v2.0',
+    }
+}
+##
+
+LOGIN_URL = 'https://quizfinder.onrender.com/login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'https://quizfinder.onrender.com/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
+LOGOUT_REDIRECT_URL = 'https://quizfinder.onrender.com/login'  # Where to redirect after logout (if not specified in LogoutView)
 
 AUTH_USER_MODEL = 'api.User'
 
@@ -154,7 +217,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -170,5 +232,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
+    "https://quizfinder.onrender.com",
+    "http://localhost:3000",  # Ako koristiš lokalni frontend za testiranje
+    "https://quiz-finder.onrender.com",
 ]

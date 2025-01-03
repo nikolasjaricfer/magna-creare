@@ -1,3 +1,4 @@
+
 from rest_framework import serializers
 from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
 from django.contrib.auth import get_user_model
@@ -87,3 +88,4 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
+

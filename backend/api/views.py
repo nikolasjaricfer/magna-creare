@@ -60,7 +60,7 @@ class CustomMicrosoftLoginView(SocialLoginView):
         refresh_token = response.data.get('refresh_token')
 
         # Customize redirect URL to include token  
-        frontend_url = f"http://localhost:3000/login?access_token={access_token}&refresh_token={refresh_token}" 
+        frontend_url = f"https://quiz-finder.onrender.com/login?access_token={access_token}&refresh_token={refresh_token}" 
         # tu treba umjesto register stavit neku drugu stranicu koja ce primit tokene, provjerit jesu li postavljeni username i uloga i onda ce se otic na /quiz
         #frontend_url = f"http://localhost:8000/auth/social/callback/microsoft/?access_token={access_token}&refresh_token={refresh_token}"
         return HttpResponseRedirect(frontend_url)
