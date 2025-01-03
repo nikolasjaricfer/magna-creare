@@ -1,0 +1,46 @@
+.kviz{
+    background-color: #ca76f7;
+    position: relative;
+    margin: 2%;
+    border-radius: 5%;
+    height: 30%;
+    width: 120%;
+}
+
+.nazivKviza{
+    position: relative;
+    top: 5%;
+    left: 5%;
+    font-size: 2vw;
+    font-weight: 700;
+}
+
+.opisKviza{
+    position: relative;
+    top: 5%;
+    left: 5%;
+    width: 60%;
+    font-size: 1.3vw;
+    font-weight: 500;
+}
+
+.informacije{
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    left: 5%;
+    font-size: 1vw;
+    
+}
+
+.prijava{
+    position: relative;
+    top: 5%; 
+}
+#prijaviSe{
+    font-size: 1vw;
+    width: 25%;
+    height: 2vw;
+
+}

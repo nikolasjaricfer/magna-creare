@@ -40,6 +40,29 @@ const Login = () => {
         }
     };
 
+    const handleMicrosoftLogin = async (e) =>{
+
+        const generateNonce = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let nonce = '';
+            for (let i = 0; i < 16; i++) {
+                nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return nonce;
+        };
+
+        var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
+        uri = uri + 'client_id=e1f95fb2-8257-4b4b-bb1a-f9cad552128e'
+        uri = uri + '&response_type=code id_token'
+        uri = uri + '&redirect_uri=http://localhost:3000/logComplete'
+        uri = uri + '&scope=openid profile email User.Read'
+        uri = uri + '&nonce=${nonce}'
+        //uri = uri + '&response_mode=query'
+        window.location.assign(uri);
+        return false;
+
+    }
+
     return (
         <div className="container">
             <h2>Login</h2>
@@ -69,6 +92,8 @@ const Login = () => {
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
             </form>
+            <button id="googleButton" onClick={handleMicrosoftLogin}>Login with microsoft</button>
+
             <p>
                 Don't have an account? <Link to="/register">Register here</Link>
             </p>
