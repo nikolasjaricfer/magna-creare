@@ -137,7 +137,7 @@ const Register = () => {
                 </div>
                 <button type="submit">Register</button>
             </form>
-            <button id="googleButton" onClick={handleMicrosoftLogin}>Register with microsoft</button>
+            <button id="googleButton" onClick={handleMicrosoftLogin}>Register with Microsoft</button>
             <p>
                 Already have an account? <Link to="/login">Login here</Link>
             </p>
