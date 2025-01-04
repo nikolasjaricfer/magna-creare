@@ -47,13 +47,14 @@ const QuizList = () => {
     useEffect(() => {
         const fetchQuizzes = async () => {
             try {
-                const response = await api.get('quizzes/');
+                const response = await api.get('api/quizzes/');
                 
                 const now = new Date();
                 const filteredQuizzes = response.data.filter(quiz => 
                     new Date(quiz.registration_deadline) >= now
-                  );
+                );
                 
+                console.log(filteredQuizzes);
                 setQuizzes(filteredQuizzes); // Postavljamo kvizove u stanje
             } catch (err) {
                 setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');

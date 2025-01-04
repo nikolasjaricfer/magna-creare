@@ -10,6 +10,7 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # For obtaining JWT
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # For refreshing JWT
     path("api-auth/", include("rest_framework.urls")),
+    
     path('api/', include('api.urls')), ##
     path('auth/', include('allauth.urls')), ##
 ]
