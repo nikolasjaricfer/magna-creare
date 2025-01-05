@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification
+from .models import User, Guest, Quiz, Team, Review, FavoriteOrganizer, Notification
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -42,6 +42,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
     
+class GuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Guest
+        fields = ['id', 'username', 'email', 'role']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

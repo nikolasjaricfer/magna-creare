@@ -22,6 +22,7 @@ from .models import (
 )
 from .serializers import (
     UserSerializer,
+    GuestSerializer,
     UserRegisterSerializer,
     QuizSerializer,
     TeamSerializer,
@@ -65,6 +66,15 @@ class CustomMicrosoftLoginView(SocialLoginView):
         #frontend_url = f"http://localhost:8000/auth/social/callback/microsoft/?access_token={access_token}&refresh_token={refresh_token}"
         return HttpResponseRedirect(frontend_url)
 ##
+
+
+class GuestViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing guest instances.
+    """
+    queryset = User.objects.all()
+    serializer_class = GuestSerializer
+    permission_classes = [AllowAny]
 
 
 class UserViewSet(viewsets.ModelViewSet):
