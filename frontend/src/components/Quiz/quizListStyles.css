@@ -43,7 +43,7 @@ p{
 .navigacija{    
     position: fixed;
     top: 7vw;
-    border-radius: 10%;
+    border-radius: 30px;
     background-color: #531b70;
     width: 20%;
     margin: 10px 15px;
@@ -94,6 +94,7 @@ p{
 }
 
 .quizzes{
+    padding-top: 100px;
     position: absolute;
     height: 45vw;
     width: 50vw;
@@ -105,7 +106,7 @@ p{
     position: absolute;
     width: 50%;
     margin: 2%;
-    border-radius: 30px;
+    border-radius: 40px;
     height: 30%;
 }
 
@@ -122,6 +123,10 @@ p{
 
 }
 
+.popupContent{
+    margin-top: 7vw;
+}
+
 textarea{
     font-size: 1.1vw;
     width: 50vw;
@@ -129,4 +134,21 @@ textarea{
 
 #addQuizText{
     font-size: 1.5vw;
+}
+
+
+button:hover {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
 }

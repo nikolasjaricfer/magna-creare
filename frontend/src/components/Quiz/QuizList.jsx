@@ -68,6 +68,7 @@ const QuizList = () => {
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
+
         try {
             await api.post('/quizzes/', {
                 title: quizTitle,
@@ -97,16 +98,19 @@ const QuizList = () => {
             setError('Please fill in all fields correctly.');
             return;
         }
-    
+        
+        console.log({
+            name: teamName,
+            quiz: quizIdToJoin,
+            members_count: membersCount,
+        });
+        
         try {
             await api.post('/teams/', {
                 name: teamName,
                 quiz: quizIdToJoin,
                 members_count: membersCount
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+          
             });
     
             setShowTeamPopup(false); // Close the team application popup on success
@@ -126,7 +130,7 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup && 
+        {!showQuizPopup && !showTeamPopup && 
         
             <div className='quizzes'>
                 {quizzes.map((quiz) => (
@@ -143,9 +147,16 @@ const QuizList = () => {
                             
                         </div>
                         <div className='prijava'>
-                            <button id='prijaviSe'>
-                                Prijavi se
-                            </button>
+                        <button 
+                            id='prijaviSe' 
+                            onClick={() => {
+                                setShowTeamPopup(true); // Open the team submission popup
+                                setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
+                            }}
+                        >
+                            Prijavi se
+                        </button>
+
                         </div>
                         
                     </div>
