@@ -15,6 +15,8 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
+from django.contrib.auth import logout
+
 
 
 from .models import (
@@ -34,6 +36,7 @@ from .serializers import (
     FavoriteOrganizerSerializer,
     NotificationSerializer,
     ChangePasswordSerializer,
+    ChangeUsernameSerializer,
     LocationSerializer
 )
 ###
@@ -215,6 +218,28 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+class ChangeUsernameView(APIView):
+    """
+    API view to change username.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+        print(user.username)
+        serializer = ChangeUsernameSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            print(user.username)
+            return Response({"success": "Username updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 class SearchView(APIView):
     permission_classes = [AllowAny]
 
@@ -300,3 +325,11 @@ class LocationViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticated]
         return super(LocationViewSet, self).get_permissions()
+    
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response({"success": "Logged out successfully"}, status=status.HTTP_200_OK)

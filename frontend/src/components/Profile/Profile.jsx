@@ -25,7 +25,7 @@ const Profile = () => {
         try {
             const token = localStorage.getItem('token');
             await api.put(
-                '/api/users/change-username/',
+                'api/accountManager/changeUsername/',
                 { username: newUsername },
                 {
                     headers: {
@@ -46,7 +46,7 @@ const Profile = () => {
         try {
             const token = localStorage.getItem('token');
             await api.post(
-                '/accountManager/changePassword/',
+                'api/accountManager/changePassword/',
                 { 
                     old_password: currentPassword,
                     new_password: newPassword }, // Proverite naziv polja

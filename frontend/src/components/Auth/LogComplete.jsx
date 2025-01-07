@@ -56,7 +56,7 @@ const LogComplete = () => {
             localStorage.setItem('username', username)
 
         try {
-            const response = await api.post('token/', {
+            const response = await api.post('api/token/', {
                 username,
                 password,
             });

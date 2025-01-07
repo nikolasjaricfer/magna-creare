@@ -25,7 +25,7 @@ const Register = () => {
         localStorage.setItem('username', username);
 
         try {
-            const response = await api.post('register/', {
+            const response = await api.post('api/register/', {
                 username,
                 email,
                 password,
@@ -61,7 +61,7 @@ const Register = () => {
         };
 
         //navigate('/auth/microsoft/login');
-        window.location.assign('https://quizfinder.onrender.com/auth/microsoft/login/');
+        window.location.assign('https://quizfinder.onrender.com/api/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
