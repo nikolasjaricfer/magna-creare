@@ -1,11 +1,21 @@
 // src/components/Quiz/QuizList.js
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import user_icon from './user_icon.png'
 import './quizListStyles.css'
 import './quizStyles.css'
 import api from '../../services/api';
+import {
+    APIProvider,
+    ControlPosition,
+    MapControl,
+    AdvancedMarker,
+    Map,
+    useMap,
+    useMapsLibrary,
+    useAdvancedMarkerRef,
+  } from "@vis.gl/react-google-maps";
 
 
 const QuizList = () => {
@@ -42,7 +52,40 @@ const QuizList = () => {
         localStorage.clear();
         logout();
         //return <Navigate to="/login" />;
-    }
+    } 
+
+    const PlaceAutocomplete = ({ onPlaceSelect }) => {
+        const [placeAutocomplete, setPlaceAutocomplete] = useState(null);
+        const inputRef = useRef(null);
+        const places = useMapsLibrary("places");
+      
+        useEffect(() => {
+          if (!places || !inputRef.current) return;
+      
+          const options = {
+            fields: ["geometry", "name", "formatted_address"],
+          };
+      
+          setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
+        }, [places]);
+        useEffect(() => {
+          if (!placeAutocomplete) return;
+      
+          placeAutocomplete.addListener("place_changed", () => {
+            onPlaceSelect(placeAutocomplete.getPlace());
+          });
+        }, [onPlaceSelect, placeAutocomplete]);
+        return (
+            <input
+            //type="text"
+            id='quizInput'
+            //placeholder="Location"
+            required
+            //value={location}
+            ref={inputRef}
+            />
+        );
+    };
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -60,8 +103,7 @@ const QuizList = () => {
                 setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
             }
         };
-    
-        fetchQuizzes(); 
+        fetchQuizzes();
     }, []);
 
     const userRole = localStorage.getItem('role');
@@ -70,7 +112,7 @@ const QuizList = () => {
         e.preventDefault();
 
         try {
-            await api.post('/quizzes/', {
+            await api.post('api/quizzes/', {
                 title: quizTitle,
                 location: location,
                 max_teams: maxTeams,
@@ -106,7 +148,7 @@ const QuizList = () => {
         });
         
         try {
-            await api.post('/teams/', {
+            await api.post('api/teams/', {
                 name: teamName,
                 quiz: quizIdToJoin,
                 members_count: membersCount
@@ -161,7 +203,6 @@ const QuizList = () => {
                         
                     </div>
                 ))}
-
             </div>
         }
 
@@ -186,14 +227,14 @@ const QuizList = () => {
                                 <option value="sports">Sports</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input
-                                type="text"
-                                id='quizInput'
-                                placeholder="Location"
-                                required
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                            />
+
+                            <APIProvider
+                                apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}
+                                solutionChannel="GMP_devsite_samples_v3_rgmautocomplete"
+                                >
+                                <PlaceAutocomplete onPlaceSelect={setLocation} />
+                            </APIProvider>
+
                             <input
                                 type="number"
                                 id='quizInput'
