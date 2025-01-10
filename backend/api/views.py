@@ -1,21 +1,19 @@
-
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-##
+
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
 from .serializers import CustomMicrosoftLoginSerializer
 from django.http import HttpResponseRedirect
-##
+
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
-
 
 from .models import (
     Quiz,
@@ -23,7 +21,8 @@ from .models import (
     Review,
     FavoriteOrganizer,
     Notification,
-    Location
+    Location,
+    User
 )
 from .serializers import (
     UserSerializer,
@@ -36,25 +35,22 @@ from .serializers import (
     ChangePasswordSerializer,
     LocationSerializer
 )
-###
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['role'] = self.user.role  # Dodaj korisničku ulogu u odgovor
-        data['id'] = self.user.id  ##
+        data['role'] = self.user.role
+        data['id'] = self.user.id
         return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-###
-User = get_user_model()
 
 
-##
 class CustomMicrosoftLoginView(SocialLoginView):
     adapter_class = MicrosoftGraphOAuth2Adapter
     serializer_class = CustomMicrosoftLoginSerializer
@@ -65,56 +61,90 @@ class CustomMicrosoftLoginView(SocialLoginView):
         access_token = response.data.get('access_token')
         refresh_token = response.data.get('refresh_token')
 
-        # Customize redirect URL to include token  
-        frontend_url = f"https://quiz-finder.onrender.com/login?access_token={access_token}&refresh_token={refresh_token}" 
-        # tu treba umjesto register stavit neku drugu stranicu koja ce primit tokene, provjerit jesu li postavljeni username i uloga i onda ce se otic na /quiz
-        #frontend_url = f"http://localhost:8000/auth/social/callback/microsoft/?access_token={access_token}&refresh_token={refresh_token}"
+        frontend_url = (
+            f"https://quiz-finder.onrender.com/login?"
+            f"access_token={access_token}&refresh_token={refresh_token}"
+        )
         return HttpResponseRedirect(frontend_url)
-##
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing user instances.
+    Only Admin can view all users or delete them.
+    Users can update their own user object, but cannot delete other users.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        # Only allow the user themselves or admin to update
+        instance = self.get_object()
+        if request.user.role != User.ADMIN and instance != request.user:
+            raise ValidationError("You do not have permission to edit this user.")
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        # Only admin can delete a user
+        instance = self.get_object()
+        if request.user.role != User.ADMIN:
+            raise ValidationError("Only admins can delete a user.")
+        return super().destroy(request, *args, **kwargs)
+
 
 class QuizViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing quiz instances.
+    - Admin can do anything (create, edit, delete).
+    - Quizmaker can create quizzes, edit/delete only their own.
+    - Regular users can read only.
     """
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def perform_create(self, serializer):
-        # Automatically set the quiz organizer to the current user
-        # Make sure the logged-in user is a quizmaker if required
-        
-        if self.request.user.role != User.QUIZMAKER:
-            raise ValidationError("Only quizmakers can create quizzes.")
-        
+        # Admin or quizmaker can create
+        if self.request.user.role not in [User.QUIZMAKER, User.ADMIN]:
+            raise ValidationError("Only quizmakers or admins can create quizzes.")
         serializer.save(organizer=self.request.user)
+
+    def perform_update(self, serializer):
+        quiz = self.get_object()
+        # Only admin or the quiz's organizer can update
+        if self.request.user.role != User.ADMIN and quiz.organizer != self.request.user:
+            raise ValidationError("You do not have permission to edit this quiz.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        quiz = self.get_object()
+        # Only admin or the quiz's organizer can delete
+        if request.user.role != User.ADMIN and quiz.organizer != request.user:
+            raise ValidationError("You do not have permission to delete this quiz.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing team instances.
+    - Anyone can read if authenticated.
+    - Users can create teams to sign up for a quiz (not if they are the quizmaker of that quiz).
+    - Only the user who registered the team, OR the quiz's organizer, OR an admin can update/delete the team.
     """
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated]
-    
 
     def perform_create(self, serializer):
         user = self.request.user
         quiz = serializer.validated_data.get('quiz')
         members_count = serializer.validated_data.get('members_count')
-        # Check if the user is a quizmaker and if they are trying to sign up to their own quiz
+
+        # Quizmaker cannot sign up for their own quiz
         if user.role == User.QUIZMAKER and quiz.organizer == user:
             raise ValidationError("Quiz makers cannot sign up for their own quizzes.")
+
         if members_count is None:
             raise ValidationError("members_count is required.")
         if members_count <= 0:
@@ -123,11 +153,38 @@ class TeamViewSet(viewsets.ModelViewSet):
             raise ValidationError(f"Team members exceed the allowed maximum of {quiz.max_team_members}.")
         if quiz.teams.count() >= quiz.max_teams:
             raise ValidationError("Maximum number of teams for this quiz has been reached.")
-        # If above condition not met, proceed with creation
+
         serializer.save(registered_by=user)
+
+    def perform_update(self, serializer):
+        team = self.get_object()
+        # Only admin, the user who registered, or the quiz's organizer can edit
+        if (
+            self.request.user.role != User.ADMIN
+            and team.registered_by != self.request.user
+            and team.quiz.organizer != self.request.user
+        ):
+            raise ValidationError("You do not have permission to edit this team.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        team = self.get_object()
+        # Only admin, the user who registered, or the quiz's organizer can delete
+        if (
+            request.user.role != User.ADMIN
+            and team.registered_by != request.user
+            and team.quiz.organizer != request.user
+        ):
+            raise ValidationError("You do not have permission to delete this team.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing review instances.
+    - Only the user who wrote the review or an admin can edit/delete it.
+    - The user must have attended the quiz and the quiz must have ended before creating a review.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
@@ -136,17 +193,27 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user = self.request.user
         quiz = serializer.validated_data.get('quiz')
 
-        # Check attendance
         attended = Team.objects.filter(quiz=quiz, registered_by=user).exists()
         if not attended:
             raise ValidationError("You cannot review a quiz you did not attend.")
 
-        # Check if quiz ended
         quiz_end_time = quiz.start_time + timedelta(minutes=quiz.duration)
         if timezone.now() < quiz_end_time:
             raise ValidationError("You can only leave a review after the quiz has ended.")
 
         serializer.save(user=user)
+
+    def perform_update(self, serializer):
+        review = self.get_object()
+        if self.request.user.role != User.ADMIN and review.user != self.request.user:
+            raise ValidationError("You do not have permission to edit this review.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        review = self.get_object()
+        if request.user.role != User.ADMIN and review.user != request.user:
+            raise ValidationError("You do not have permission to delete this review.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class FavoriteOrganizerViewSet(viewsets.ModelViewSet):
@@ -186,20 +253,17 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT token manually
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        # Prepare response data
         response_data = {
             'user': UserSerializer(user, context=self.get_serializer_context()).data,
             'access_token': access_token,
             'refresh_token': refresh_token,
         }
-
         return Response(response_data, status=201)
-    
+
 
 class ChangePasswordView(APIView):
     """
@@ -229,7 +293,6 @@ class SearchView(APIView):
                 "locations": []
             }, status=200)
 
-        # Quizzes that match title and are in the future
         quizzes = Quiz.objects.filter(
             Q(title__icontains=q),
             start_time__gt=now
@@ -245,7 +308,6 @@ class SearchView(APIView):
             for quiz in quizzes
         ]
 
-        # Organizers with quizmaker role
         organizers = User.objects.filter(
             role=User.QUIZMAKER,
             username__icontains=q
@@ -260,7 +322,6 @@ class SearchView(APIView):
             for organizer in organizers
         ]
 
-        # Quizzes by location name (future)
         location_quizzes = Quiz.objects.filter(
             Q(location__name__icontains=q),
             start_time__gt=now
@@ -281,8 +342,7 @@ class SearchView(APIView):
             "organizers": organizers_data,
             "locations": locations_data
         }, status=200)
-    
-    # api/views.py (continued)
+
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
@@ -290,11 +350,9 @@ class LocationViewSet(viewsets.ModelViewSet):
     """
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    permission_classes = [IsAuthenticated]  # Allows any authenticated user
 
-    # Optional: Customize permissions for specific actions
-    # For example, allow only admin users to delete locations
     def get_permissions(self):
+        # Example: only admin can delete
         if self.action == 'destroy':
             self.permission_classes = [permissions.IsAdminUser]
         else:
