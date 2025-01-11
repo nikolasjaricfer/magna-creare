@@ -14,7 +14,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
-
+import math
 from .models import (
     Quiz,
     Team,
@@ -283,66 +283,157 @@ class SearchView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        q = request.query_params.get('q', '').strip()
+        # -- Step 1: Capture the current time --
         now = timezone.now()
 
-        if not q:
-            return Response({
-                "quizzes": [],
-                "organizers": [],
-                "locations": []
-            }, status=200)
+        # -- Step 2: Extract query parameters for filters --
+        q = request.query_params.get('q', '').strip()           # Existing text search
+        lat_param = request.query_params.get('lat', None)       # User's latitude
+        lng_param = request.query_params.get('lng', None)       # User's longitude
+        distance_param = request.query_params.get('distance', None)  # Distance in kilometers
+        category_param = request.query_params.get('category', None)
+        difficulty_param = request.query_params.get('difficulty', None)
+        fee_min_param = request.query_params.get('fee_min', None)
+        fee_max_param = request.query_params.get('fee_max', None)
+        is_league_param = request.query_params.get('is_league', None)   # 'true'/'false'
+        max_team_members_param = request.query_params.get('max_team_members', None)
+        prizes_param = request.query_params.get('prizes', None)         # 'true'/'false'
+        show_full_param = request.query_params.get('show_full', 'true') # 'true'/'false'
 
-        quizzes = Quiz.objects.filter(
-            Q(title__icontains=q),
-            start_time__gt=now
-        )
-        quizzes_data = [
-            {
+        # -- Step 3: Start with a base queryset of future quizzes only --
+        quizzes_qs = Quiz.objects.filter(start_time__gt=now)
+
+        # -- Step 4: Text-based search (if q is provided) --
+        if q:
+            quizzes_qs = quizzes_qs.filter(
+                Q(title__icontains=q) | 
+                Q(location__name__icontains=q) |
+                Q(organizer__username__icontains=q)
+            )
+
+        # -- Step 5: Filter by category --
+        if category_param:
+            quizzes_qs = quizzes_qs.filter(category=category_param)
+
+        # -- Step 6: Filter by difficulty --
+        if difficulty_param:
+            quizzes_qs = quizzes_qs.filter(difficulty__iexact=difficulty_param)
+
+        # -- Step 7: Filter by fee range (fee_min, fee_max) --
+        if fee_min_param:
+            try:
+                fee_min_value = float(fee_min_param)
+                quizzes_qs = quizzes_qs.filter(fee__gte=fee_min_value)
+            except ValueError:
+                pass
+        if fee_max_param:
+            try:
+                fee_max_value = float(fee_max_param)
+                quizzes_qs = quizzes_qs.filter(fee__lte=fee_max_value)
+            except ValueError:
+                pass
+
+        # -- Step 8: Filter by is_league (if specified) --
+        # Expecting query_params like "is_league=true" or "is_league=false"
+        if is_league_param is not None:
+            if is_league_param.lower() == 'true':
+                quizzes_qs = quizzes_qs.filter(is_league=True)
+            elif is_league_param.lower() == 'false':
+                quizzes_qs = quizzes_qs.filter(is_league=False)
+
+        # -- Step 9: Filter by max_team_members --
+        # E.g., if user wants quizzes allowing up to X team members, we do <= X
+        if max_team_members_param:
+            try:
+                mtm_value = int(max_team_members_param)
+                quizzes_qs = quizzes_qs.filter(max_team_members__gte=mtm_value)
+            except ValueError:
+                pass
+
+        # -- Step 10: Filter by prizes --
+        # If 'prizes=true', we only show quizzes that have something in the prizes field
+        # If 'prizes=false', we only show quizzes that have an empty (blank) prizes field
+        if prizes_param is not None:
+            if prizes_param.lower() == 'true':
+                quizzes_qs = quizzes_qs.exclude(prizes__exact='')
+            elif prizes_param.lower() == 'false':
+                quizzes_qs = quizzes_qs.filter(prizes__exact='')
+
+        # -- Step 11: Filter out "filled" quizzes if show_full=false --
+        # A quiz is "filled" if quiz.teams.count() >= quiz.max_teams
+        if show_full_param.lower() == 'false':
+            # show only quizzes that are *not* filled
+            filtered_ids = []
+            for quiz in quizzes_qs:
+                if quiz.teams.count() < quiz.max_teams:
+                    filtered_ids.append(quiz.id)
+            quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+
+        # -- Step 12: Filter by distance if lat/lng/distance are given --
+        if lat_param and lng_param and distance_param:
+            try:
+                user_lat = float(lat_param)
+                user_lng = float(lng_param)
+                max_distance = float(distance_param)
+
+                # We can do a naive Haversine or spherical law of cosines
+                # For simplicity, let's do a rough "distance in km" filter:
+
+                filtered_ids = []
+                for quiz in quizzes_qs:
+                    location = quiz.location
+                    if location.latitude and location.longitude:
+                        dist = self.calculate_distance(
+                            user_lat, user_lng, 
+                            location.latitude, location.longitude
+                        )
+                        if dist <= max_distance:
+                            filtered_ids.append(quiz.id)
+                quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+            except ValueError:
+                pass
+
+        # -- Step 13: Return final results in a structured format --
+        quizzes_data = []
+        for quiz in quizzes_qs:
+            quizzes_data.append({
                 "id": quiz.id,
                 "title": quiz.title,
                 "location": quiz.location.name,
                 "start_time": quiz.start_time,
-                "type": "quiz"
-            }
-            for quiz in quizzes
-        ]
+                "organizer": quiz.organizer.username,
+                "category": quiz.category,
+                "difficulty": quiz.difficulty,
+                "fee": str(quiz.fee),
+                "is_league": quiz.is_league,
+                "prizes": quiz.prizes,
+                "teams_registered": quiz.teams.count(),
+                "max_teams": quiz.max_teams,
+                "max_team_members": quiz.max_team_members
+            })
 
-        organizers = User.objects.filter(
-            role=User.QUIZMAKER,
-            username__icontains=q
-        )
-        organizers_data = [
-            {
-                "id": organizer.id,
-                "username": organizer.username,
-                "role": organizer.role,
-                "type": "organizer"
-            }
-            for organizer in organizers
-        ]
+        return Response({"quizzes": quizzes_data}, status=200)
 
-        location_quizzes = Quiz.objects.filter(
-            Q(location__name__icontains=q),
-            start_time__gt=now
-        )
-        locations_data = [
-            {
-                "id": loc_quiz.id,
-                "title": loc_quiz.title,
-                "location": loc_quiz.location.name,
-                "start_time": loc_quiz.start_time,
-                "type": "location"
-            }
-            for loc_quiz in location_quizzes
-        ]
+    def calculate_distance(self, lat1, lng1, lat2, lng2):
+        """
+        Calculate distance in kilometers between two lat/lng points
+        using the Haversine formula or a simplified approach.
+        """
+        R = 6371.0  # Radius of Earth in km
+        lat1_radians = math.radians(lat1)
+        lng1_radians = math.radians(lng1)
+        lat2_radians = math.radians(lat2)
+        lng2_radians = math.radians(lng2)
 
-        return Response({
-            "quizzes": quizzes_data,
-            "organizers": organizers_data,
-            "locations": locations_data
-        }, status=200)
+        dlat = lat2_radians - lat1_radians
+        dlng = lng2_radians - lng1_radians
 
+        a = (math.sin(dlat / 2) ** 2
+             + math.cos(lat1_radians) * math.cos(lat2_radians) * math.sin(dlng / 2) ** 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        distance = R * c
+
+        return distance
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
