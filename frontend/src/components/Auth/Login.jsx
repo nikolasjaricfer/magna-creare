@@ -91,7 +91,10 @@ const Login = () => {
                 <button type="submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
-                <button id="guestButton" onClick={() => navigate('/quiz')}>
+                <button id="guestButton" onClick={() => {
+                                                    localStorage.setItem('role', 'guest');
+                                                    navigate('/quiz');
+    }}>
                     Continue as guest
                 </button>
                 
