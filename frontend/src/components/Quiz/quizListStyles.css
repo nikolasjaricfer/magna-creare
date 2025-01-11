@@ -54,7 +54,15 @@ p{
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+    text-align: center;
 
+}
+
+#adminText{
+    margin-top: 5%;
+    font-size: 1.3vw;
+    color: white;
+    font-weight: bold;
 }
 
 #navButtons{
@@ -77,7 +85,7 @@ p{
 }
 
 .contactButton{
-    margin-top: 35vh;
+    margin-top: 10%;
     height: 6vw;
 }
 #contacts{
