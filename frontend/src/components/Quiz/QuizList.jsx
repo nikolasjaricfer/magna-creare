@@ -39,7 +39,15 @@ const QuizList = () => {
 
     const [quizzes, setQuizzes] = useState([]);
     const [allQuizzes, setAllQuizzes] = useState([]);
-    var changeQuiz = false;
+
+    const [users, setUsers] = useState([]);
+    const [viewUsers, setViewUsers] = useState(false);
+
+    const [teams, setTeams] = useState([]);
+    const [viewTeams, setViewTeams] = useState(false);
+
+    const [reviews, setReviews] = useState([]);
+    const [viewReviews, setViewReviews] = useState(false);
 
     if (!isAuthenticated) {
         localStorage.clear();
@@ -68,7 +76,53 @@ const QuizList = () => {
         fetchQuizzes(); 
     }, []);
 
+
+
     const userRole = localStorage.getItem('role');
+
+    if(userRole === 'admin'){
+        useEffect(() => {
+            const fetchUsers = async () => {
+                try {
+                    const response = await api.get('api/users/');
+                    setUsers(response.data);
+
+                    //console.log(users);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+
+            const fetchTeams = async () => {
+                try {
+                    const response = await api.get('api/teams/');
+                    setTeams(response.data);
+
+                    //console.log(teams);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+
+            const fetchReviews = async () => {
+                try {
+                    const response = await api.get('api/reviews/');
+                    setReviews(response.data);
+
+                    //console.log(reviews);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+        
+            fetchUsers(); // dohvacanje svih usera
+            fetchTeams(); // dohvacanje svih timova
+            fetchReviews(); // dohvacanje svih reviewa
+        }, []);
+    }
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
@@ -122,6 +176,8 @@ const QuizList = () => {
         }
     };
 
+
+
     const handleDeleteQuiz = async (quizId) => {
         if (!window.confirm('Are you sure you want to delete this quiz?')) return; // Confirm action
     
@@ -140,6 +196,46 @@ const QuizList = () => {
 
         }
     };
+
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm('Are you sure you want to delete this user?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/users/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+            console.log(err);
+
+        }
+    };
+
+    const handleDeleteTeam = async (teamId) => {
+        if (!window.confirm('Are you sure you want to delete this team?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/teams/${teamId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setTeams((prevTeams) => prevTeams.filter((team) => team.id !== teamId));
+
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+            console.log(err);
+
+        }
+    };
     
 
     return (
@@ -152,7 +248,7 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup & !showAllQuizzes && 
+        {!showQuizPopup & !showAllQuizzes  & !(viewReviews | viewTeams | viewUsers)&& 
         
             <div className='quizzes'>
                 {quizzes.map((quiz) => (
@@ -208,6 +304,51 @@ const QuizList = () => {
             </div>
         }
 
+        {!showQuizPopup & viewUsers && 
+            <div className='quizzes'>
+            {users.map((user) => (
+                <div className='kviz' key={user.id}>
+                    <div className='nazivKviza'>{user.username}</div>
+                    <div className='opisKviza'>
+                        <p className='opis'>{user.email}</p>
+                    </div>
+                <div className='informacije'>
+                    <p> Role: {user.role}</p>
+                    <p> Id: {user.id}</p>
+                    
+                </div>
+                <div className='prijava'>
+                    <button id='prijaviSe' onClick={() => handleDeleteUser(user.id)}>
+                        Obriši
+                    </button>
+                </div>
+                
+            </div>
+            ))}
+
+        </div>}
+
+        {!showQuizPopup & viewTeams && 
+            <div className='quizzes'>
+            {teams.map((team) => (
+                <div className='kviz' key={team.id}>
+                    <div className='nazivKviza'>{team.name}</div>
+                    <div className='opisKviza'>
+                        <p className='opis'>Clanovi: {team.members_count}</p>
+                    </div>
+                <div className='informacije'>
+                    <p> Quiz: {team.quiz}</p>	
+                </div>
+                <div className='prijava'>
+                    <button id='prijaviSe' onClick={() => handleDeleteTeam(team.id)}>
+                        Obriši
+                    </button>
+                </div>
+                
+            </div>
+            ))}
+
+        </div>}
 
             {showQuizPopup && (
                 <div className="popupOverlay">
@@ -341,7 +482,7 @@ const QuizList = () => {
             <div className='navigacija'>
                 <div className='buttons'>
 
-                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false)}}> Home</button>
+                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
                     <button id='navButtons'> My archive</button>
                     <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>
 
@@ -350,8 +491,26 @@ const QuizList = () => {
                             Add Quiz
                         </button>
                     )}
+
+                    {userRole === 'admin' && (<p id='adminText'> Admin functions </p>)	}
                     {userRole === 'admin' && (
-                        <button id='navButtons' onClick={() => {setShowAllQuizzes(true); setShowQuizPopup(false); setShowTeamPopup(false)}}> Admin </button>
+                        <button id='navButtons' onClick={() => {setShowAllQuizzes(true); setShowQuizPopup(false); setShowTeamPopup(false); setViewUsers(false);setViewTeams(false);setViewReviews(false); }}> Quizzes  </button>
+
+                    )}
+
+                    {userRole === 'admin' && (
+                        <button id='navButtons' onClick={() => {setViewUsers(true); setShowQuizPopup(false); setShowTeamPopup(false); setShowAllQuizzes(false);setViewTeams(false);setViewReviews(false); }}> Users  </button>
+
+                    )}
+
+                    {userRole === 'admin' && (
+                        <button id='navButtons' onClick={() => {setViewTeams(true); setShowQuizPopup(false); setShowTeamPopup(false); setViewUsers(false);setShowAllQuizzes(false);setViewReviews(false); }}> Teams  </button>
+
+                    )}
+
+                    {userRole === 'admin' && (
+                        <button id='navButtons' onClick={() => {setViewReviews(true); setShowQuizPopup(false); setShowTeamPopup(false); setViewUsers(false);setViewTeams(false);setShowAllQuizzes(false); }}> Reviews  </button>
+
                     )}
                 </div>
 
