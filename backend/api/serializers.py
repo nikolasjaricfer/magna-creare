@@ -70,9 +70,11 @@ class TeamSerializer(serializers.ModelSerializer):
         read_only_fields = ['registered_by', 'created_at']
 
 class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Review
         fields = '__all__'
+        read_only_fields = ['user', 'created_at']
 
 class FavoriteOrganizerSerializer(serializers.ModelSerializer):
     class Meta:
