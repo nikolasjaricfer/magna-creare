@@ -28,6 +28,7 @@ const QuizList = () => {
     const [duration, setDuration] = useState('');
     const [organizer, setOrganizer] = useState('');
     const [prizes, setPrizes] = useState('');
+    const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
     // For applying to a quiz
     const [teamName, setTeamName] = useState('');
@@ -37,6 +38,8 @@ const QuizList = () => {
     const [error, setError] = useState(null);
 
     const [quizzes, setQuizzes] = useState([]);
+    const [allQuizzes, setAllQuizzes] = useState([]);
+    var changeQuiz = false;
 
     if (!isAuthenticated) {
         localStorage.clear();
@@ -48,6 +51,7 @@ const QuizList = () => {
         const fetchQuizzes = async () => {
             try {
                 const response = await api.get('api/quizzes/');
+                setAllQuizzes(response.data);
                 
                 const now = new Date();
                 const filteredQuizzes = response.data.filter(quiz => 
@@ -69,7 +73,7 @@ const QuizList = () => {
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/quizzes/', {
+            const response = await api.post('/quizzes/', {
                 title: quizTitle,
                 location: location,
                 max_teams: maxTeams,
@@ -84,6 +88,9 @@ const QuizList = () => {
                 prizes: prizes,
                 start_time: startTime,
             });
+            setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setShowAllQuizzes(false);
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
@@ -114,6 +121,25 @@ const QuizList = () => {
             setError(err.response?.data?.detail || 'An error occurred');
         }
     };
+
+    const handleDeleteQuiz = async (quizId) => {
+        if (!window.confirm('Are you sure you want to delete this quiz?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/quizzes/${quizId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setAllQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== quizId));
+            setQuizzes((prevQuizzes) => prevQuizzes.filter((quiz) => quiz.id !== quizId));
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+
+        }
+    };
     
 
     return (
@@ -126,7 +152,7 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup && 
+        {!showQuizPopup & !showAllQuizzes && 
         
             <div className='quizzes'>
                 {quizzes.map((quiz) => (
@@ -149,6 +175,34 @@ const QuizList = () => {
                         </div>
                         
                     </div>
+                ))}
+
+            </div>
+        }
+
+        {!showQuizPopup & showAllQuizzes && 
+        
+            <div className='quizzes'>
+                {allQuizzes.map((quiz) => (
+                    <div className='kviz' key={quiz.id}>
+                        <div className='nazivKviza'>{quiz.title}</div>
+                        <div className='opisKviza'>
+                            <p className='opis'>{quiz.description}</p>
+                        </div>
+                    <div className='informacije'>
+                        <p>Kategorija: {quiz.category}</p>
+                        <p>Težina: {quiz.difficulty}</p>
+                        <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
+                        <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                        
+                    </div>
+                    <div className='prijava'>
+                        <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
+                            Obriši
+                        </button>
+                    </div>
+                    
+                </div>
                 ))}
 
             </div>
@@ -287,14 +341,17 @@ const QuizList = () => {
             <div className='navigacija'>
                 <div className='buttons'>
 
-                    <button id='navButtons'> Home</button>
+                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false)}}> Home</button>
                     <button id='navButtons'> My archive</button>
                     <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>
 
-                    {userRole === 'quizmaker' && (
+                    {userRole === 'quizmaker' | userRole === 'admin' && (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
                         </button>
+                    )}
+                    {userRole === 'admin' && (
+                        <button id='navButtons' onClick={() => {setShowAllQuizzes(true); setShowQuizPopup(false); setShowTeamPopup(false)}}> Admin </button>
                     )}
                 </div>
 
