@@ -33,7 +33,7 @@ const MyArchive = () => {
     useEffect(() => {
         const fetchArchivedQuizzesAndReviews = async () => {
             try {
-                const teamsResp = await api.get('/teams/', {
+                const teamsResp = await api.get('api/teams/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (teamsResp.status !== 200) {
@@ -44,7 +44,7 @@ const MyArchive = () => {
                 const myTeams = allTeams.filter((team) => team.registered_by === userId);
                 const quizIdsIJoined = myTeams.map((t) => t.quiz);
 
-                const quizzesResp = await api.get('/quizzes/', {
+                const quizzesResp = await api.get('api/quizzes/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (quizzesResp.status !== 200) {
@@ -59,7 +59,7 @@ const MyArchive = () => {
                 });
                 setArchivedQuizzes(endedAndJoined);
 
-                const reviewsResp = await api.get('/reviews/', {
+                const reviewsResp = await api.get('api/reviews/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (reviewsResp.status === 200 && reviewsResp.data) {
@@ -103,7 +103,7 @@ const MyArchive = () => {
             }
 
             await api.post(
-                '/reviews/',
+                'api/reviews/',
                 {
                     quiz: quizId,
                     rating: ratingValue,

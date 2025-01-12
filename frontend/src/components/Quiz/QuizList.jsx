@@ -36,17 +36,33 @@ const QuizList = () => {
     const [duration, setDuration] = useState('');
     const [organizer, setOrganizer] = useState('');
     const [prizes, setPrizes] = useState('');
-    const [teamName, setTeamName] = useState('');
-    const [membersCount, setMembersCount] = useState('');
-    const [quizIdToJoin, setQuizIdToJoin] = useState('');
-    const [error, setError] = useState(null);
-    const [quizzes, setQuizzes] = useState([]);
     const [appliedQuizzes, setAppliedQuizzes] = useState([]);
     const [activeQuizzes, setActiveQuizzes] = useState([]);
     const [archivedQuizzes, setArchivedQuizzes] = useState([]);
+    const [showAllQuizzes, setShowAllQuizzes] = useState(false);
+
+    // For applying to a quiz
+    const [teamName, setTeamName] = useState('');
+    const [membersCount, setMembersCount] = useState('');
+    const [quizIdToJoin, setQuizIdToJoin] = useState('');
+
+    const [error, setError] = useState(null);
+
+    const [quizzes, setQuizzes] = useState([]);
+    const [allQuizzes, setAllQuizzes] = useState([]);
+
+    const [users, setUsers] = useState([]);
+    const [viewUsers, setViewUsers] = useState(false);
+
+    const [teams, setTeams] = useState([]);
+    const [viewTeams, setViewTeams] = useState(false);
+
+    const [reviews, setReviews] = useState([]);
+    const [viewReviews, setViewReviews] = useState(false);
 
     const userRole = localStorage.getItem('role');
     const pageLocation = useLocation();
+
 
     if (!isAuthenticated) {
         localStorage.clear();
@@ -100,7 +116,7 @@ const QuizList = () => {
     useEffect(() => {
         const fetchQuizzes = async () => {
             try {
-                const response = await api.get('/quizzes/', {
+                const response = await api.get('api/quizzes/', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     }
@@ -256,49 +272,44 @@ const QuizList = () => {
                 placeholder="Search quizzes..."
                 id="searchbar"
             />
-                <div class="filterDropdown">
-                    <button class="dropdownButton">Filter</button>
-                        <div class="dropdownContent">
-                            <div class="filterSection">
+                <div className="filterDropdown">
+                    <button className="dropdownButton">Filter</button>
+                        <div className="dropdownContent">
+                            <div className="filterSection">
                                 <h4>Težina</h4>
                                 <label>Lagano <input type="checkbox" /></label>
                                 <label>Srednje <input type="checkbox" /></label>
                                 <label>Teško <input type="checkbox" /></label>
                             </div>
-                                <div class="divider"></div> 
-                            <div class="filterSection">
+                                <div className="divider"></div> 
+                            <div className="filterSection">
                                 <h4>Tema</h4>
                                 <label>Sport <input type="checkbox" /></label>
                                 <label>Glazba <input type="checkbox" /></label>
                                 <label>Opće <input type="checkbox" /></label>
                                 <label>Drugo <input type="checkbox" /></label>
                             </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
+                            <div className="divider"></div>
+                            <div className="filterSection">
                                 <h4>Cijena</h4>
                                 <label>manje od 5 <input type="checkbox" /></label>
                                 <label>manje od 10 <input type="checkbox" /></label>
                                 <label>manje od 15 <input type="checkbox" /></label>
                             </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
+                            <div className="divider"></div>
+                            <div className="filterSection">
                                 <h4>Liga</h4>
                                 <label>Da <input type="checkbox" /></label>
                                 <label>Ne <input type="checkbox" /></label>
                             </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
+                            <div className="divider"></div>
+                            <div className="filterSection">
                                 <h4>Udaljenost</h4>
                                 <label>Najbliži <input type="checkbox" /></label>
                                 <label>Najdalji <input type="checkbox" /></label>
                             </div>
                         </div>
                 </div>
-
-
-             
-
-
         </div>
                 
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
@@ -307,8 +318,7 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup & !showAllQuizzes  & !(viewReviews | viewTeams | viewUsers)&& 
-        
+        {!showQuizPopup && !showAllQuizzes && !(viewReviews | viewTeams | viewUsers) && !showTeamPopup &&
             <div className='quizzes'>
                 {quizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
@@ -317,83 +327,25 @@ const QuizList = () => {
                             <p className='opis'>{quiz.description}</p>
                         </div>
                         <div className='informacije'>
-                            <p>Kategorija: {quiz.category}</p>
-                            <p>Težina: {quiz.difficulty}</p>
-                            <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
-                            <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                            
+                            <p>Category: {quiz.category}</p>
+                            <p>Difficulty: {quiz.difficulty}</p>
+                            <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
+                            <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                            <p>Duration: {quiz.duration} mins</p>                            
                         </div>
                         <div className='prijava'>
-                        <button 
-                            id='prijaviSe' 
-                            onClick={() => {
-                                handleNavigation('/quiz/');
-                                setShowTeamPopup(true); // Open the team submission popup
-                                setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
-                            }}
-                        >
-                            Prijavi se
-                        </button>
-
+                            <button 
+                                id='prijaviSe' 
+                                onClick={() => {
+                                    handleNavigation('/quiz/');
+                                    setShowTeamPopup(true); // Open the team submission popup
+                                    setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
+                                }}>
+                                Prijavi se
+                            </button>
                         </div>
-                        
                     </div>
                 ))}
-            </div>
-        }
-
-        {!showQuizPopup & showAllQuizzes && 
-        
-            <div className='quizzes'>
-                {allQuizzes.map((quiz) => (
-                    <div className='kviz' key={quiz.id}>
-                        <div className='nazivKviza'>{quiz.title}</div>
-                        <div className='opisKviza'>
-                            <p className='opis'>{quiz.description}</p>
-                        </div>
-                    <div className='informacije'>
-                        <p>Kategorija: {quiz.category}</p>
-                        <p>Težina: {quiz.difficulty}</p>
-                        <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
-                        <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                        
-                    </div>
-                    <div className='prijava'>
-                        <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
-                            Obriši
-                        </button>
-                    </div>
-                    
-                </div>
-                ))}
-            </div>
-        }
-
-        {!showQuizPopup & showAllQuizzes && 
-        
-            <div className='quizzes'>
-                {allQuizzes.map((quiz) => (
-                    <div className='kviz' key={quiz.id}>
-                        <div className='nazivKviza'>{quiz.title}</div>
-                        <div className='opisKviza'>
-                            <p className='opis'>{quiz.description}</p>
-                        </div>
-                    <div className='informacije'>
-                        <p>Kategorija: {quiz.category}</p>
-                        <p>Težina: {quiz.difficulty}</p>
-                        <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
-                        <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                        
-                    </div>
-                    <div className='prijava'>
-                        <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
-                            Obriši
-                        </button>
-                    </div>
-                    
-                </div>
-                ))}
-
             </div>
         }
 
@@ -572,12 +524,9 @@ const QuizList = () => {
             {/* Navigation */}
             <div className='navigacija'>
                 <div className='buttons'>
-
-                    <button id='navButtons' onClick={() => handleNavigation('/quiz')}> Home</button>
-                    <button id='navButtons' onClick={() => handleNavigation('/archive')}> My archive</button>
-                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
-                    <button id='navButtons'> My archive</button>
-                    <button id='navButtons' onClick={() => navigate('/maps')}>Maps</button>
+                    <button id='navButtons' className={pageLocation.pathname === '/quiz' ? 'active' : ''} onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
+                    <button id='navButtons' className={pageLocation.pathname === '/my-archive' ? 'active' : ''} onClick={() => handleNavigation('/my-archive')}> My archive</button>
+                    <button id='navButtons' className={pageLocation.pathname === '/maps' ? 'active' : ''} onClick={() => navigate('/maps')}>Maps</button>
                     {userRole === 'quizmaker' | userRole === 'admin' && (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
@@ -605,7 +554,7 @@ const QuizList = () => {
 
                     )}
                 </div>
-                <input class="locationInput" type="text" placeholder="Insert your location" />
+                <input className="locationInput" type="text" placeholder="Insert your location" />
 
 
                     <div className='contactButton'>
