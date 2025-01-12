@@ -1,23 +1,21 @@
-
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-##
+
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
 from .serializers import CustomMicrosoftLoginSerializer
 from django.http import HttpResponseRedirect
-##
+
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
 from django.contrib.auth import logout
-
-
+import math
 
 from .models import (
     Quiz,
@@ -25,7 +23,8 @@ from .models import (
     Review,
     FavoriteOrganizer,
     Notification,
-    Location
+    Location,
+    User
 )
 from .serializers import (
     UserSerializer,
@@ -39,25 +38,22 @@ from .serializers import (
     ChangeUsernameSerializer,
     LocationSerializer
 )
-###
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['role'] = self.user.role  # Dodaj korisničku ulogu u odgovor
-        data['id'] = self.user.id  ##
+        data['role'] = self.user.role
+        data['id'] = self.user.id
         return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-###
-User = get_user_model()
 
 
-##
 class CustomMicrosoftLoginView(SocialLoginView):
     adapter_class = MicrosoftGraphOAuth2Adapter
     serializer_class = CustomMicrosoftLoginSerializer
@@ -68,56 +64,90 @@ class CustomMicrosoftLoginView(SocialLoginView):
         access_token = response.data.get('access_token')
         refresh_token = response.data.get('refresh_token')
 
-        # Customize redirect URL to include token  
-        frontend_url = f"https://quiz-finder.onrender.com/login?access_token={access_token}&refresh_token={refresh_token}" 
-        # tu treba umjesto register stavit neku drugu stranicu koja ce primit tokene, provjerit jesu li postavljeni username i uloga i onda ce se otic na /quiz
-        #frontend_url = f"http://localhost:8000/auth/social/callback/microsoft/?access_token={access_token}&refresh_token={refresh_token}"
+        frontend_url = (
+            f"https://quiz-finder.onrender.com/login?"
+            f"access_token={access_token}&refresh_token={refresh_token}"
+        )
         return HttpResponseRedirect(frontend_url)
-##
 
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing user instances.
+    Only Admin can view all users or delete them.
+    Users can update their own user object, but cannot delete other users.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        # Only allow the user themselves or admin to update
+        instance = self.get_object()
+        if request.user.role != User.ADMIN and instance != request.user:
+            raise ValidationError("You do not have permission to edit this user.")
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        # Only admin can delete a user
+        instance = self.get_object()
+        if request.user.role != User.ADMIN:
+            raise ValidationError("Only admins can delete a user.")
+        return super().destroy(request, *args, **kwargs)
+
 
 class QuizViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing quiz instances.
+    - Admin can do anything (create, edit, delete).
+    - Quizmaker can create quizzes, edit/delete only their own.
+    - Regular users can read only.
     """
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def perform_create(self, serializer):
-        # Automatically set the quiz organizer to the current user
-        # Make sure the logged-in user is a quizmaker if required
-        
-        if self.request.user.role != User.QUIZMAKER:
-            raise ValidationError("Only quizmakers can create quizzes.")
-        
+        # Admin or quizmaker can create
+        if self.request.user.role not in [User.QUIZMAKER, User.ADMIN]:
+            raise ValidationError("Only quizmakers or admins can create quizzes.")
         serializer.save(organizer=self.request.user)
+
+    def perform_update(self, serializer):
+        quiz = self.get_object()
+        # Only admin or the quiz's organizer can update
+        if self.request.user.role != User.ADMIN and quiz.organizer != self.request.user:
+            raise ValidationError("You do not have permission to edit this quiz.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        quiz = self.get_object()
+        # Only admin or the quiz's organizer can delete
+        if request.user.role != User.ADMIN and quiz.organizer != request.user:
+            raise ValidationError("You do not have permission to delete this quiz.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing team instances.
+    - Anyone can read if authenticated.
+    - Users can create teams to sign up for a quiz (not if they are the quizmaker of that quiz).
+    - Only the user who registered the team, OR the quiz's organizer, OR an admin can update/delete the team.
     """
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated]
-    
 
     def perform_create(self, serializer):
         user = self.request.user
         quiz = serializer.validated_data.get('quiz')
         members_count = serializer.validated_data.get('members_count')
-        # Check if the user is a quizmaker and if they are trying to sign up to their own quiz
+
+        # Quizmaker cannot sign up for their own quiz
         if user.role == User.QUIZMAKER and quiz.organizer == user:
             raise ValidationError("Quiz makers cannot sign up for their own quizzes.")
+
         if members_count is None:
             raise ValidationError("members_count is required.")
         if members_count <= 0:
@@ -126,11 +156,38 @@ class TeamViewSet(viewsets.ModelViewSet):
             raise ValidationError(f"Team members exceed the allowed maximum of {quiz.max_team_members}.")
         if quiz.teams.count() >= quiz.max_teams:
             raise ValidationError("Maximum number of teams for this quiz has been reached.")
-        # If above condition not met, proceed with creation
+
         serializer.save(registered_by=user)
+
+    def perform_update(self, serializer):
+        team = self.get_object()
+        # Only admin, the user who registered, or the quiz's organizer can edit
+        if (
+            self.request.user.role != User.ADMIN
+            and team.registered_by != self.request.user
+            and team.quiz.organizer != self.request.user
+        ):
+            raise ValidationError("You do not have permission to edit this team.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        team = self.get_object()
+        # Only admin, the user who registered, or the quiz's organizer can delete
+        if (
+            request.user.role != User.ADMIN
+            and team.registered_by != request.user
+            and team.quiz.organizer != request.user
+        ):
+            raise ValidationError("You do not have permission to delete this team.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing review instances.
+    - Only the user who wrote the review or an admin can edit/delete it.
+    - The user must have attended the quiz and the quiz must have ended before creating a review.
+    """
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
@@ -139,17 +196,27 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user = self.request.user
         quiz = serializer.validated_data.get('quiz')
 
-        # Check attendance
         attended = Team.objects.filter(quiz=quiz, registered_by=user).exists()
         if not attended:
             raise ValidationError("You cannot review a quiz you did not attend.")
 
-        # Check if quiz ended
         quiz_end_time = quiz.start_time + timedelta(minutes=quiz.duration)
         if timezone.now() < quiz_end_time:
             raise ValidationError("You can only leave a review after the quiz has ended.")
 
         serializer.save(user=user)
+
+    def perform_update(self, serializer):
+        review = self.get_object()
+        if self.request.user.role != User.ADMIN and review.user != self.request.user:
+            raise ValidationError("You do not have permission to edit this review.")
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        review = self.get_object()
+        if request.user.role != User.ADMIN and review.user != request.user:
+            raise ValidationError("You do not have permission to delete this review.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class FavoriteOrganizerViewSet(viewsets.ModelViewSet):
@@ -189,20 +256,17 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT token manually
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        # Prepare response data
         response_data = {
             'user': UserSerializer(user, context=self.get_serializer_context()).data,
             'access_token': access_token,
             'refresh_token': refresh_token,
         }
-
         return Response(response_data, status=201)
-    
+
 
 class ChangePasswordView(APIView):
     """
@@ -244,70 +308,157 @@ class SearchView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        q = request.query_params.get('q', '').strip()
+        # -- Step 1: Capture the current time --
         now = timezone.now()
 
-        if not q:
-            return Response({
-                "quizzes": [],
-                "organizers": [],
-                "locations": []
-            }, status=200)
+        # -- Step 2: Extract query parameters for filters --
+        q = request.query_params.get('q', '').strip()           # Existing text search
+        lat_param = request.query_params.get('lat', None)       # User's latitude
+        lng_param = request.query_params.get('lng', None)       # User's longitude
+        distance_param = request.query_params.get('distance', None)  # Distance in kilometers
+        category_param = request.query_params.get('category', None)
+        difficulty_param = request.query_params.get('difficulty', None)
+        fee_min_param = request.query_params.get('fee_min', None)
+        fee_max_param = request.query_params.get('fee_max', None)
+        is_league_param = request.query_params.get('is_league', None)   # 'true'/'false'
+        max_team_members_param = request.query_params.get('max_team_members', None)
+        prizes_param = request.query_params.get('prizes', None)         # 'true'/'false'
+        show_full_param = request.query_params.get('show_full', 'true') # 'true'/'false'
 
-        # Quizzes that match title and are in the future
-        quizzes = Quiz.objects.filter(
-            Q(title__icontains=q),
-            start_time__gt=now
-        )
-        quizzes_data = [
-            {
+        # -- Step 3: Start with a base queryset of future quizzes only --
+        quizzes_qs = Quiz.objects.filter(start_time__gt=now)
+
+        # -- Step 4: Text-based search (if q is provided) --
+        if q:
+            quizzes_qs = quizzes_qs.filter(
+                Q(title__icontains=q) | 
+                Q(location__name__icontains=q) |
+                Q(organizer__username__icontains=q)
+            )
+
+        # -- Step 5: Filter by category --
+        if category_param:
+            quizzes_qs = quizzes_qs.filter(category=category_param)
+
+        # -- Step 6: Filter by difficulty --
+        if difficulty_param:
+            quizzes_qs = quizzes_qs.filter(difficulty__iexact=difficulty_param)
+
+        # -- Step 7: Filter by fee range (fee_min, fee_max) --
+        if fee_min_param:
+            try:
+                fee_min_value = float(fee_min_param)
+                quizzes_qs = quizzes_qs.filter(fee__gte=fee_min_value)
+            except ValueError:
+                pass
+        if fee_max_param:
+            try:
+                fee_max_value = float(fee_max_param)
+                quizzes_qs = quizzes_qs.filter(fee__lte=fee_max_value)
+            except ValueError:
+                pass
+
+        # -- Step 8: Filter by is_league (if specified) --
+        # Expecting query_params like "is_league=true" or "is_league=false"
+        if is_league_param is not None:
+            if is_league_param.lower() == 'true':
+                quizzes_qs = quizzes_qs.filter(is_league=True)
+            elif is_league_param.lower() == 'false':
+                quizzes_qs = quizzes_qs.filter(is_league=False)
+
+        # -- Step 9: Filter by max_team_members --
+        # E.g., if user wants quizzes allowing up to X team members, we do <= X
+        if max_team_members_param:
+            try:
+                mtm_value = int(max_team_members_param)
+                quizzes_qs = quizzes_qs.filter(max_team_members__gte=mtm_value)
+            except ValueError:
+                pass
+
+        # -- Step 10: Filter by prizes --
+        # If 'prizes=true', we only show quizzes that have something in the prizes field
+        # If 'prizes=false', we only show quizzes that have an empty (blank) prizes field
+        if prizes_param is not None:
+            if prizes_param.lower() == 'true':
+                quizzes_qs = quizzes_qs.exclude(prizes__exact='')
+            elif prizes_param.lower() == 'false':
+                quizzes_qs = quizzes_qs.filter(prizes__exact='')
+
+        # -- Step 11: Filter out "filled" quizzes if show_full=false --
+        # A quiz is "filled" if quiz.teams.count() >= quiz.max_teams
+        if show_full_param.lower() == 'false':
+            # show only quizzes that are *not* filled
+            filtered_ids = []
+            for quiz in quizzes_qs:
+                if quiz.teams.count() < quiz.max_teams:
+                    filtered_ids.append(quiz.id)
+            quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+
+        # -- Step 12: Filter by distance if lat/lng/distance are given --
+        if lat_param and lng_param and distance_param:
+            try:
+                user_lat = float(lat_param)
+                user_lng = float(lng_param)
+                max_distance = float(distance_param)
+
+                # We can do a naive Haversine or spherical law of cosines
+                # For simplicity, let's do a rough "distance in km" filter:
+
+                filtered_ids = []
+                for quiz in quizzes_qs:
+                    location = quiz.location
+                    if location.latitude and location.longitude:
+                        dist = self.calculate_distance(
+                            user_lat, user_lng, 
+                            location.latitude, location.longitude
+                        )
+                        if dist <= max_distance:
+                            filtered_ids.append(quiz.id)
+                quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+            except ValueError:
+                pass
+
+        # -- Step 13: Return final results in a structured format --
+        quizzes_data = []
+        for quiz in quizzes_qs:
+            quizzes_data.append({
                 "id": quiz.id,
                 "title": quiz.title,
                 "location": quiz.location.name,
                 "start_time": quiz.start_time,
-                "type": "quiz"
-            }
-            for quiz in quizzes
-        ]
+                "organizer": quiz.organizer.username,
+                "category": quiz.category,
+                "difficulty": quiz.difficulty,
+                "fee": str(quiz.fee),
+                "is_league": quiz.is_league,
+                "prizes": quiz.prizes,
+                "teams_registered": quiz.teams.count(),
+                "max_teams": quiz.max_teams,
+                "max_team_members": quiz.max_team_members
+            })
 
-        # Organizers with quizmaker role
-        organizers = User.objects.filter(
-            role=User.QUIZMAKER,
-            username__icontains=q
-        )
-        organizers_data = [
-            {
-                "id": organizer.id,
-                "username": organizer.username,
-                "role": organizer.role,
-                "type": "organizer"
-            }
-            for organizer in organizers
-        ]
+        return Response({"quizzes": quizzes_data}, status=200)
 
-        # Quizzes by location name (future)
-        location_quizzes = Quiz.objects.filter(
-            Q(location__name__icontains=q),
-            start_time__gt=now
-        )
-        locations_data = [
-            {
-                "id": loc_quiz.id,
-                "title": loc_quiz.title,
-                "location": loc_quiz.location.name,
-                "start_time": loc_quiz.start_time,
-                "type": "location"
-            }
-            for loc_quiz in location_quizzes
-        ]
+    def calculate_distance(self, lat1, lng1, lat2, lng2):
+        """
+        Calculate distance in kilometers between two lat/lng points
+        using the Haversine formula or a simplified approach.
+        """
+        R = 6371.0  # Radius of Earth in km
+        lat1_radians = math.radians(lat1)
+        lng1_radians = math.radians(lng1)
+        lat2_radians = math.radians(lat2)
+        lng2_radians = math.radians(lng2)
 
-        return Response({
-            "quizzes": quizzes_data,
-            "organizers": organizers_data,
-            "locations": locations_data
-        }, status=200)
-    
-    # api/views.py (continued)
+        dlat = lat2_radians - lat1_radians
+        dlng = lng2_radians - lng1_radians
+
+        a = (math.sin(dlat / 2) ** 2
+             + math.cos(lat1_radians) * math.cos(lat2_radians) * math.sin(dlng / 2) ** 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        distance = R * c
+
+        return distance
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
@@ -315,11 +466,9 @@ class LocationViewSet(viewsets.ModelViewSet):
     """
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
-    permission_classes = [IsAuthenticated]  # Allows any authenticated user
 
-    # Optional: Customize permissions for specific actions
-    # For example, allow only admin users to delete locations
     def get_permissions(self):
+        # Example: only admin can delete
         if self.action == 'destroy':
             self.permission_classes = [permissions.IsAdminUser]
         else:
