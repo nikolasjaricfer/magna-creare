@@ -179,8 +179,7 @@ const QuizList = () => {
         e.preventDefault();
 
         try {
-            await api.post('api/quizzes/', {
-            const response = await api.post('/quizzes/', {
+            const response = await api.post('api/quizzes/', {
                 title: quizTitle,
                 location: location,
                 max_teams: maxTeams,
@@ -627,8 +626,7 @@ const QuizList = () => {
                     <button id='navButtons' onClick={() => handleNavigation('/archive')}> My archive</button>
                     <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
                     <button id='navButtons'> My archive</button>
-                    <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>
-
+                    <button id='navButtons' onClick={() => navigate('/maps')}>Maps</button>
                     {userRole === 'quizmaker' | userRole === 'admin' && (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
