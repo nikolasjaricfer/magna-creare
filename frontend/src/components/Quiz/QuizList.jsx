@@ -1,9 +1,10 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
-import user_icon from './user_icon.png'
-import './quizListStyles.css'
-import './quizStyles.css'
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import user_icon from './user_icon.png';
+import './quizListStyles.css';
+import './quizStyles.css';
 import api from '../../services/api';
 import {
     APIProvider,
@@ -19,10 +20,8 @@ import {
 
 const QuizList = () => {
     const token = localStorage.getItem('token');
-
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
-
     const [showQuizPopup, setShowQuizPopup] = useState(false); // State for quiz creation popup
     const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
     const [quizTitle, setQuizTitle] = useState('');
@@ -37,26 +36,17 @@ const QuizList = () => {
     const [duration, setDuration] = useState('');
     const [organizer, setOrganizer] = useState('');
     const [prizes, setPrizes] = useState('');
-    const [showAllQuizzes, setShowAllQuizzes] = useState(false);
-
-    // For applying to a quiz
     const [teamName, setTeamName] = useState('');
     const [membersCount, setMembersCount] = useState('');
     const [quizIdToJoin, setQuizIdToJoin] = useState('');
-
     const [error, setError] = useState(null);
-
     const [quizzes, setQuizzes] = useState([]);
-    const [allQuizzes, setAllQuizzes] = useState([]);
+    const [appliedQuizzes, setAppliedQuizzes] = useState([]);
+    const [activeQuizzes, setActiveQuizzes] = useState([]);
+    const [archivedQuizzes, setArchivedQuizzes] = useState([]);
 
-    const [users, setUsers] = useState([]);
-    const [viewUsers, setViewUsers] = useState(false);
-
-    const [teams, setTeams] = useState([]);
-    const [viewTeams, setViewTeams] = useState(false);
-
-    const [reviews, setReviews] = useState([]);
-    const [viewReviews, setViewReviews] = useState(false);
+    const userRole = localStorage.getItem('role');
+    const pageLocation = useLocation();
 
     if (!isAuthenticated) {
         localStorage.clear();
@@ -110,70 +100,31 @@ const QuizList = () => {
     useEffect(() => {
         const fetchQuizzes = async () => {
             try {
-                const response = await api.get('api/quizzes/');
-                setAllQuizzes(response.data);
-                
+                const response = await api.get('/quizzes/', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+
                 const now = new Date();
                 const filteredQuizzes = response.data.filter(quiz => 
                     new Date(quiz.registration_deadline) >= now
                 );
-                
+
                 console.log(filteredQuizzes);
-                setQuizzes(filteredQuizzes); // Postavljamo kvizove u stanje
+                setQuizzes(filteredQuizzes); // Set quizzes state
             } catch (err) {
                 setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
             }
         };
+
+            // Load applied quizzes from localStorage
+        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+        setAppliedQuizzes(appliedQuizzesFromStorage); // Update state with applied quizzes
+
+
         fetchQuizzes();
-    }, []);
-
-
-
-    const userRole = localStorage.getItem('role');
-
-    if(userRole === 'admin'){
-        useEffect(() => {
-            const fetchUsers = async () => {
-                try {
-                    const response = await api.get('api/users/');
-                    setUsers(response.data);
-
-                    //console.log(users);
-
-                } catch (err) {
-                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-                }
-            };
-
-            const fetchTeams = async () => {
-                try {
-                    const response = await api.get('api/teams/');
-                    setTeams(response.data);
-
-                    //console.log(teams);
-
-                } catch (err) {
-                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-                }
-            };
-
-            const fetchReviews = async () => {
-                try {
-                    const response = await api.get('api/reviews/');
-                    setReviews(response.data);
-
-                    //console.log(reviews);
-
-                } catch (err) {
-                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-                }
-            };
-        
-            fetchUsers(); // dohvacanje svih usera
-            fetchTeams(); // dohvacanje svih timova
-            fetchReviews(); // dohvacanje svih reviewa
-        }, []);
-    }
+    }, [token]);
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
@@ -205,26 +156,28 @@ const QuizList = () => {
 
     const handleTeamSubmission = async (e) => {
         e.preventDefault();
-    
+
         if (!teamName || !membersCount || !quizIdToJoin) {
             setError('Please fill in all fields correctly.');
             return;
         }
-        
-        console.log({
-            name: teamName,
-            quiz: quizIdToJoin,
-            members_count: membersCount,
-        });
-        
+
         try {
             await api.post('api/teams/', {
                 name: teamName,
                 quiz: quizIdToJoin,
-                members_count: membersCount
-          
+                members_count: membersCount,
             });
-    
+
+            
+            // Update applied quizzes in localStorage
+            const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+            appliedQuizzesFromStorage.push(quizIdToJoin);
+            localStorage.setItem('appliedQuizzes', JSON.stringify(appliedQuizzesFromStorage));
+
+            setAppliedQuizzes(appliedQuizzesFromStorage); // Update state
+
+            alert("You have successfully applied to the quiz!");
             setShowTeamPopup(false); // Close the team application popup on success
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
@@ -495,7 +448,7 @@ const QuizList = () => {
                     <div className="popupContent">
                         <h3 id='addQuizText'>Add a New Quiz</h3>
                         <form onSubmit={handleQuizSubmission}>
-                            <input
+                        <input
                                 type="text"
                                 id='quizInput'
                                 placeholder="Quiz Title"
@@ -581,14 +534,13 @@ const QuizList = () => {
                                 onChange={(e) => setPrizes(e.target.value)}
                             />
                             <button type="submit" id='quizButtons'>Submit Quiz</button>
-                            <button type="button" id='quizButtons' onClick={() => setShowQuizPopup(false)}>
-                                Cancel
-                            </button>
+                            <button type="button" id='quizButtons' onClick={() => setShowQuizPopup(false)}>Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
 
+            {/* Team application popup */}
             {showTeamPopup && (
                 <div className="popupOverlay">
                     <div className="popupContent">
@@ -611,14 +563,13 @@ const QuizList = () => {
                                 required
                             />
                             <button type="submit" id="quizButtons">Apply</button>
-                            <button type="button" id="quizButtons" onClick={() => setShowTeamPopup(false)}>
-                                Cancel
-                            </button>
+                            <button type="button" id="quizButtons" onClick={() => setShowTeamPopup(false)}>Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
 
+            {/* Navigation */}
             <div className='navigacija'>
                 <div className='buttons'>
 
@@ -667,11 +618,4 @@ const QuizList = () => {
     );
 };
 
-export default QuizList;  
-
-
-
-
-
-
-
+export default QuizList;

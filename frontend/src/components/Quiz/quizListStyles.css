@@ -183,6 +183,15 @@ p{
     font-size: 1.5vw;
 }
 
+#navButtons.active {
+    background-color: white; /* Highlight color */
+    color: #531b70;
+    font-weight: bolder;
+    width: 78%;
+    height: 3.2vw;
+    box-shadow: 0 0 8px #ae4bdf, 0 0 18px #ae4bdf, 0 0 28px #ae4bdf;
+}
+
 #quizButtons{
     font-size: 1.2vw;
     height: 2vw;
