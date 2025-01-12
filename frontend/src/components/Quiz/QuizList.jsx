@@ -6,17 +6,7 @@ import user_icon from './user_icon.png'
 import './quizListStyles.css'
 import './quizStyles.css'
 import api from '../../services/api';
-import {
-    APIProvider,
-    ControlPosition,
-    MapControl,
-    AdvancedMarker,
-    Map,
-    useMap,
-    useMapsLibrary,
-    useAdvancedMarkerRef,
-  } from "@vis.gl/react-google-maps";
-
+import GoogleAutocomplete from '../Google/GoogleAutocomplete';
 
 const QuizList = () => {
     const token = localStorage.getItem('token');
@@ -27,7 +17,6 @@ const QuizList = () => {
     const [showQuizPopup, setShowQuizPopup] = useState(false); // State for quiz creation popup
     const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
     const [quizTitle, setQuizTitle] = useState('');
-    const [location, setLocation] = useState('');
     const [maxTeams, setMaxTeams] = useState('');
     const [startTime, setStartTime] = useState('');
     const [registration_deadline, setRegistration_deadline] = useState('');
@@ -38,6 +27,12 @@ const QuizList = () => {
     const [duration, setDuration] = useState('');
     const [organizer, setOrganizer] = useState('');
     const [prizes, setPrizes] = useState('');
+
+    const [placeDetails, setPlaceDetails] = useState({
+        coordinates: null,
+        formattedAddress: "",
+        placeId: "",        
+    });
 
     // For applying to a quiz
     const [teamName, setTeamName] = useState('');
@@ -53,39 +48,6 @@ const QuizList = () => {
         logout();
         //return <Navigate to="/login" />;
     } 
-
-    const PlaceAutocomplete = ({ onPlaceSelect }) => {
-        const [placeAutocomplete, setPlaceAutocomplete] = useState(null);
-        const inputRef = useRef(null);
-        const places = useMapsLibrary("places");
-      
-        useEffect(() => {
-          if (!places || !inputRef.current) return;
-      
-          const options = {
-            fields: ["geometry", "name", "formatted_address"],
-          };
-      
-          setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
-        }, [places]);
-        useEffect(() => {
-          if (!placeAutocomplete) return;
-      
-          placeAutocomplete.addListener("place_changed", () => {
-            onPlaceSelect(placeAutocomplete.getPlace());
-          });
-        }, [onPlaceSelect, placeAutocomplete]);
-        return (
-            <input
-            //type="text"
-            id='quizInput'
-            //placeholder="Location"
-            required
-            //value={location}
-            ref={inputRef}
-            />
-        );
-    };
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -228,12 +190,7 @@ const QuizList = () => {
                                 <option value="other">Other</option>
                             </select>
 
-                            <APIProvider
-                                apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}
-                                solutionChannel="GMP_devsite_samples_v3_rgmautocomplete"
-                                >
-                                <PlaceAutocomplete onPlaceSelect={setLocation} />
-                            </APIProvider>
+                            <GoogleAutocomplete onLocationSelect={setPlaceDetails}/>
 
                             <input
                                 type="number"
@@ -338,7 +295,6 @@ const QuizList = () => {
 
             <div className='navigacija'>
                 <div className='buttons'>
-
                     <button id='navButtons'> Home</button>
                     <button id='navButtons'> My archive</button>
                     <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>

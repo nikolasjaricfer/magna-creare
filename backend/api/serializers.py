@@ -4,8 +4,17 @@ from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification, L
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from dj_rest_auth.registration.serializers import SocialLoginSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['role'] = self.user.role  # Dodaj korisničku ulogu u odgovor
+        data['id'] = self.user.id  ##
+        return data
 
 
 class CustomMicrosoftLoginSerializer(SocialLoginSerializer):

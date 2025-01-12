@@ -37,27 +37,20 @@ from .serializers import (
     NotificationSerializer,
     ChangePasswordSerializer,
     ChangeUsernameSerializer,
-    LocationSerializer
+    LocationSerializer,
+    CustomTokenObtainPairSerializer
 )
 ###
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['role'] = self.user.role  # Dodaj korisničku ulogu u odgovor
-        data['id'] = self.user.id  ##
-        return data
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-###
 User = get_user_model()
 
 
-##
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
 class CustomMicrosoftLoginView(SocialLoginView):
     adapter_class = MicrosoftGraphOAuth2Adapter
     serializer_class = CustomMicrosoftLoginSerializer
