@@ -73,6 +73,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'user']
+
 
 class FavoriteOrganizerSerializer(serializers.ModelSerializer):
     class Meta:

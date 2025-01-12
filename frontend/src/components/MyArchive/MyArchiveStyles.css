@@ -1,0 +1,52 @@
+.arhivirani-kviz{
+    background-color: #ca76f7;
+    position: relative;
+    margin: 2%;
+    border-radius: 30px;
+    height: 50%;
+    width: 120%;
+}
+
+.arhivirane-informacije{
+    position: relative;
+    display: flex;
+    margin-top: 1vw;
+    justify-content: space-between;
+    width: 80%;
+    left: 5%;
+    font-size: 1.2vw; 
+}
+
+.rating{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5vw;
+}
+#submit{
+    font-size: 1.1vw;
+    width: 25%;
+    height: 2.3vw;
+}
+
+select{
+    font-size: 1.1vw;
+    width: 25%;
+    height: 2.3vw;
+}
+
+label{
+    margin-left: 1.5vw;
+    font-weight: bolder;
+}
+
+.already-rated{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 10vw;
+}
+
+
