@@ -1,11 +1,20 @@
-// src/components/Quiz/QuizList.js
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import user_icon from './user_icon.png'
 import './quizListStyles.css'
 import './quizStyles.css'
 import api from '../../services/api';
+import {
+    APIProvider,
+    ControlPosition,
+    MapControl,
+    AdvancedMarker,
+    Map,
+    useMap,
+    useMapsLibrary,
+    useAdvancedMarkerRef,
+  } from "@vis.gl/react-google-maps";
 
 
 const QuizList = () => {
@@ -53,7 +62,50 @@ const QuizList = () => {
         localStorage.clear();
         logout();
         //return <Navigate to="/login" />;
-    }
+    } 
+
+        
+    const handleNavigation = (path) => {
+        if (!isAuthenticated) {
+            navigate('/login'); // Redirect to login if not authenticated
+        } else {
+            navigate(path); // Navigate to the desired path if authenticated
+        }
+    };
+    
+
+    const PlaceAutocomplete = ({ onPlaceSelect }) => {
+        const [placeAutocomplete, setPlaceAutocomplete] = useState(null);
+        const inputRef = useRef(null);
+        const places = useMapsLibrary("places");
+      
+        useEffect(() => {
+          if (!places || !inputRef.current) return;
+      
+          const options = {
+            fields: ["geometry", "name", "formatted_address"],
+          };
+      
+          setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
+        }, [places]);
+        useEffect(() => {
+          if (!placeAutocomplete) return;
+      
+          placeAutocomplete.addListener("place_changed", () => {
+            onPlaceSelect(placeAutocomplete.getPlace());
+          });
+        }, [onPlaceSelect, placeAutocomplete]);
+        return (
+            <input
+            //type="text"
+            id='quizInput'
+            //placeholder="Location"
+            required
+            //value={location}
+            ref={inputRef}
+            />
+        );
+    };
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -72,8 +124,7 @@ const QuizList = () => {
                 setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
             }
         };
-    
-        fetchQuizzes(); 
+        fetchQuizzes();
     }, []);
 
 
@@ -128,6 +179,7 @@ const QuizList = () => {
         e.preventDefault();
 
         try {
+            await api.post('api/quizzes/', {
             const response = await api.post('/quizzes/', {
                 title: quizTitle,
                 location: location,
@@ -167,7 +219,7 @@ const QuizList = () => {
         });
         
         try {
-            await api.post('/teams/', {
+            await api.post('api/teams/', {
                 name: teamName,
                 quiz: quizIdToJoin,
                 members_count: membersCount
@@ -246,7 +298,58 @@ const QuizList = () => {
         <div>
             <div className='homeTop'>
                 <h3 className='ime'>QUIZFINDER</h3>
-                <button id='profileButton' onClick={() => navigate('/Profile')}>
+                <div className="searchBar">
+            <input
+                type="text"
+                placeholder="Search quizzes..."
+                id="searchbar"
+            />
+                <div class="filterDropdown">
+                    <button class="dropdownButton">Filter</button>
+                        <div class="dropdownContent">
+                            <div class="filterSection">
+                                <h4>Težina</h4>
+                                <label>Lagano <input type="checkbox" /></label>
+                                <label>Srednje <input type="checkbox" /></label>
+                                <label>Teško <input type="checkbox" /></label>
+                            </div>
+                                <div class="divider"></div> 
+                            <div class="filterSection">
+                                <h4>Tema</h4>
+                                <label>Sport <input type="checkbox" /></label>
+                                <label>Glazba <input type="checkbox" /></label>
+                                <label>Opće <input type="checkbox" /></label>
+                                <label>Drugo <input type="checkbox" /></label>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="filterSection">
+                                <h4>Cijena</h4>
+                                <label>manje od 5 <input type="checkbox" /></label>
+                                <label>manje od 10 <input type="checkbox" /></label>
+                                <label>manje od 15 <input type="checkbox" /></label>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="filterSection">
+                                <h4>Liga</h4>
+                                <label>Da <input type="checkbox" /></label>
+                                <label>Ne <input type="checkbox" /></label>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="filterSection">
+                                <h4>Udaljenost</h4>
+                                <label>Najbliži <input type="checkbox" /></label>
+                                <label>Najdalji <input type="checkbox" /></label>
+                            </div>
+                        </div>
+                </div>
+
+
+             
+
+
+        </div>
+                
+                <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
                     <img className='userImg' src={user_icon} alt='user_icon' />
                 </button>
             </div>
@@ -272,6 +375,7 @@ const QuizList = () => {
                         <button 
                             id='prijaviSe' 
                             onClick={() => {
+                                handleNavigation('/quiz/');
                                 setShowTeamPopup(true); // Open the team submission popup
                                 setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
                             }}
@@ -283,7 +387,33 @@ const QuizList = () => {
                         
                     </div>
                 ))}
+            </div>
+        }
 
+        {!showQuizPopup & showAllQuizzes && 
+        
+            <div className='quizzes'>
+                {allQuizzes.map((quiz) => (
+                    <div className='kviz' key={quiz.id}>
+                        <div className='nazivKviza'>{quiz.title}</div>
+                        <div className='opisKviza'>
+                            <p className='opis'>{quiz.description}</p>
+                        </div>
+                    <div className='informacije'>
+                        <p>Kategorija: {quiz.category}</p>
+                        <p>Težina: {quiz.difficulty}</p>
+                        <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
+                        <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                        
+                    </div>
+                    <div className='prijava'>
+                        <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
+                            Obriši
+                        </button>
+                    </div>
+                    
+                </div>
+                ))}
             </div>
         }
 
@@ -381,14 +511,14 @@ const QuizList = () => {
                                 <option value="sports">Sports</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input
-                                type="text"
-                                id='quizInput'
-                                placeholder="Location"
-                                required
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                            />
+
+                            <APIProvider
+                                apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}
+                                solutionChannel="GMP_devsite_samples_v3_rgmautocomplete"
+                                >
+                                <PlaceAutocomplete onPlaceSelect={setLocation} />
+                            </APIProvider>
+
                             <input
                                 type="number"
                                 id='quizInput'
@@ -493,6 +623,8 @@ const QuizList = () => {
             <div className='navigacija'>
                 <div className='buttons'>
 
+                    <button id='navButtons' onClick={() => handleNavigation('/quiz')}> Home</button>
+                    <button id='navButtons' onClick={() => handleNavigation('/archive')}> My archive</button>
                     <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
                     <button id='navButtons'> My archive</button>
                     <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>
@@ -524,8 +656,10 @@ const QuizList = () => {
 
                     )}
                 </div>
+                <input class="locationInput" type="text" placeholder="Insert your location" />
 
-                <div className='contactButton'>
+
+                    <div className='contactButton'>
                     <button id='contacts' onClick={() => navigate('/contacts')}>
                         Developer contacts
                     </button>
@@ -536,3 +670,10 @@ const QuizList = () => {
 };
 
 export default QuizList;  
+
+
+
+
+
+
+

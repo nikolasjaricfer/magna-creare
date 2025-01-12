@@ -91,6 +91,13 @@ const Login = () => {
                 <button type="submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+                <button id="guestButton" onClick={() => {
+                                                    localStorage.setItem('role', 'guest');
+                                                    navigate('/quiz');
+    }}>
+                    Continue as guest
+                </button>
+                
             </form>
             <button id="googleButton" onClick={handleMicrosoftLogin}>Login with microsoft</button>
 
