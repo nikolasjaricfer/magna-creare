@@ -1,5 +1,6 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
+import api from '../services/api'
 
 export const AuthContext = createContext();
 
@@ -13,9 +14,18 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true); // Update state, triggering re-renders
     };
 
-    const logout = () => {
+    const logout = async () => {
+        const token = localStorage.getItem('token');
+        await api.post('api/logout/', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('id');
+        localStorage.removeItem('role');
+        localStorage.removeItem('username');
         setIsAuthenticated(false); // Update state, triggering re-renders
     };
 

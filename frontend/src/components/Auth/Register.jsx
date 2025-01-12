@@ -25,7 +25,7 @@ const Register = () => {
         localStorage.setItem('username', username);
 
         try {
-            const response = await api.post('register/', {
+            const response = await api.post('api/register/', {
                 username,
                 email,
                 password,
@@ -34,6 +34,7 @@ const Register = () => {
             });
 
             localStorage.setItem('role', role);
+            localStorage.setItem('id', response.data.user.id)
 
             // Call the login function with the token from registration response
             login({
@@ -50,9 +51,27 @@ const Register = () => {
 
     const handleMicrosoftLogin = async(e)=>{
 
+        const generateNonce = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let nonce = '';
+            for (let i = 0; i < 16; i++) {
+                nonce += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return nonce;
+        };
+
         //navigate('/auth/microsoft/login');
-        window.location.assign('https://quizfinder.onrender.com/auth/microsoft/login/');
+        window.location.assign('https://quizfinder.onrender.com/api/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
+        //window.location.assign('http://localhost:8000/auth/microsoft/login/');
+        var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
+        uri = uri + 'client_id=e1f95fb2-8257-4b4b-bb1a-f9cad552128e'
+        uri = uri + '&response_type=code id_token'
+        uri = uri + '&redirect_uri=http://localhost:3000/regComplete'
+        uri = uri + '&scope=openid profile email User.Read'
+        uri = uri + '&nonce=${nonce}'
+        //uri = uri + '&response_mode=query'
+        window.location.assign(uri);
         return false;
 
 
@@ -118,7 +137,7 @@ const Register = () => {
                 </div>
                 <button type="submit">Register</button>
             </form>
-            <button id="googleButton" onClick={handleMicrosoftLogin}>Register with google</button>
+            <button id="googleButton" onClick={handleMicrosoftLogin}>Register with Microsoft</button>
             <p>
                 Already have an account? <Link to="/login">Login here</Link>
             </p>

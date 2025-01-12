@@ -52,23 +52,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = "django-insecure-nma=xi6x2p-crjg^ifqqkapyu1qjd0l=+wn)-rijk_o%$!k3w_" ovo je bilo prije secret key, ispod je noviji
+SECRET_KEY = "django-insecure-nma=xi6x2p-crjg^ifqqkapyu1qjd0l=+wn)-rijk_o%$!k3w_"# ovo je bilo prije secret key, ispod je noviji
 
-##
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
-##
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        'rest_framework.authentication.SessionAuthentication', ##
-        'rest_framework.authentication.TokenAuthentication', ## 
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -94,13 +90,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "oauth2_provider",
-    'rest_framework.authtoken', ##
-    'dj_rest_auth',
-    'dj_rest_auth.registration',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.microsoft', ##
+    'dj_rest_auth',
+    'rest_framework.authtoken',
+
 ]
 
 MIDDLEWARE = [
@@ -205,9 +200,10 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 ##
 
-LOGIN_URL = 'https://quizfinder.onrender.com/login'  # URL name for the login page
-LOGIN_REDIRECT_URL = 'https://quizfinder.onrender.com/quiz'  # Where to redirect after successful login, tu treba bit 'quizzes'?
-LOGOUT_REDIRECT_URL = 'https://quizfinder.onrender.com/login'  # Where to redirect after logout (if not specified in LogoutView)
+LOGIN_URL = 'login'  # URL name for the login page
+LOGIN_REDIRECT_URL = 'home'  # Where to redirect after successful login
+LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout (if not specified in LogoutView)
+
 
 AUTH_USER_MODEL = 'api.User'
 

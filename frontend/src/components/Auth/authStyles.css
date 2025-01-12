@@ -53,6 +53,25 @@ button{
     cursor: pointer;
 }
 
+#googleButton{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    width: 220px;
+    height: 59px;
+    color: black;
+    border-radius: 0;
+    background-color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#googleButton:hover{
+   background-color: #c499dc;
+}
+
 button:hover{
     display: flex;
     justify-content: center;

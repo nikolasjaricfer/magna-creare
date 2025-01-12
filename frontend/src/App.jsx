@@ -7,7 +7,9 @@ import Register from './components/Auth/Register';
 import QuizList from './components/Quiz/QuizList';
 import Profile from './components/Profile/Profile';
 import Contacts from './components/Contacts/Contacts';
-import completeReg from './components/Auth/completeReg';
+import RegComplete from './components/Auth/RegComplete';
+import LogComplete from './components/Auth/LogComplete';
+import Maps from './components/Google/GoogleMapsPage';
 
 const App = () => {
     return (
@@ -20,7 +22,9 @@ const App = () => {
                     <Route path="/quiz" element={<QuizList />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/contacts" element={<Contacts />} />
-                    <Route path="/completereg" element={<completeReg />} />
+                    <Route path="/regComplete" element={<RegComplete />} />
+                    <Route path="/logComplete" element={<LogComplete />} />
+                    <Route path="/maps" element={<Maps />} />
                 </Routes>
             </Router>
         </AuthProvider>
