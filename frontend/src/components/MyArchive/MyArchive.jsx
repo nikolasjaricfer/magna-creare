@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import user_icon from './user_icon.png';
 import api from '../../services/api';
 import './MyArchiveStyles.css';
+import { FaStar } from 'react-icons/fa';
+
 
 const MyArchive = () => {
     const token = localStorage.getItem('token');
@@ -187,19 +189,24 @@ const MyArchive = () => {
                             ) : (
                                 <div className="rating">
                                     <label>Rate this quiz:</label>
-                                    <select
-                                        onChange={(e) =>
-                                            handleRatingChange(quiz.id, e.target.value)
-                                        }
-                                        value={ratings[quiz.id] || ''}
-                                    >
-                                        <option value="">Select rating</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                        <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
-                                    </select>
+                                    <div className="star-rating">
+                                        {[...Array(5)].map((_, index) => {
+                                            const ratingValue = index + 1;
+
+                                            return (
+                                                <FaStar
+                                                    key={ratingValue}
+                                                    size={24}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        color: ratingValue <= (ratings[quiz.id] || 0) ? '#ffc107' : '#e4e5e9',
+                                                    }}
+                                                    onClick={() => handleRatingChange(quiz.id, ratingValue)}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+
 
                                     <label>Comments:</label>
                                     <textarea
