@@ -320,6 +320,7 @@ class SearchView(APIView):
     def get(self, request):
         # -- Step 1: Capture the current time --
         now = timezone.now()
+        print(request.query_params)
 
         # -- Step 2: Extract query parameters for filters --
         q = request.query_params.get('q', '').strip()           # Existing text search
@@ -337,6 +338,7 @@ class SearchView(APIView):
 
         # -- Step 3: Start with a base queryset of future quizzes only --
         quizzes_qs = Quiz.objects.filter(start_time__gt=now)
+        #print(quizzes_qs)
 
         # -- Step 4: Text-based search (if q is provided) --
         if q:
@@ -353,6 +355,8 @@ class SearchView(APIView):
         # -- Step 6: Filter by difficulty --
         if difficulty_param:
             quizzes_qs = quizzes_qs.filter(difficulty__iexact=difficulty_param)
+            print(difficulty_param)
+            print(quizzes_qs)
 
         # -- Step 7: Filter by fee range (fee_min, fee_max) --
         if fee_min_param:
@@ -447,6 +451,7 @@ class SearchView(APIView):
                 "max_team_members": quiz.max_team_members
             })
 
+        print(len(quizzes_qs))
         return Response({"quizzes": quizzes_data}, status=200)
 
     def calculate_distance(self, lat1, lng1, lat2, lng2):

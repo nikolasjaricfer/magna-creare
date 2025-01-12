@@ -25,6 +25,9 @@ const App = () => {
                     <Route path="/regComplete" element={<RegComplete />} />
                     <Route path="/logComplete" element={<LogComplete />} />
                     <Route path="/maps" element={<Maps />} />
+                    <Route path="/archive" element={<Maps />} /> 
+                    {/* OVO GORE PROMIJENITI U MYARCHIVE TO JE EMA NAPRAVILA OVO JE PLACEHOLDER */}
+
                 </Routes>
             </Router>
         </AuthProvider>

@@ -58,6 +58,14 @@ const QuizList = () => {
     const [reviews, setReviews] = useState([]);
     const [viewReviews, setViewReviews] = useState(false);
 
+    const [filters, setFilters] = useState({
+        difficulty: [],
+        category: [],
+        price: [],
+        is_league: null,
+        distance: null
+    })
+
     if (!isAuthenticated) {
         localStorage.clear();
         logout();
@@ -107,27 +115,129 @@ const QuizList = () => {
         );
     };
 
-    useEffect(() => {
-        const fetchQuizzes = async () => {
-            try {
-                const response = await api.get('api/quizzes/');
-                setAllQuizzes(response.data);
-                
-                const now = new Date();
-                const filteredQuizzes = response.data.filter(quiz => 
-                    new Date(quiz.registration_deadline) >= now
-                );
-                
-                console.log(filteredQuizzes);
-                setQuizzes(filteredQuizzes); // Postavljamo kvizove u stanje
-            } catch (err) {
-                setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+        /*
+    function fetchQuizzes(url) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Filtered quizzes:", data.quizzes);
+                // You can now update the frontend with the filtered quiz results
+            })
+            .catch(error => console.error("Error fetching quizzes:", error));
+    }
+            */
+
+    
+// Function to fetch quizzes based on filters
+const fetchQuizzes = async () => {
+    try {
+        //const filters = getSelectedFilters(); // Get filters dynamically
+        const url = buildSearchUrl(filters); // Construct URL with filters
+        console.log(url);
+        const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+        console.log(url);
+        console.log(JSON.stringify(response.data))
+
+        setAllQuizzes(response.data.quizzes); // Set all quizzes to state
+
+        // Filter quizzes based on the registration deadline
+        const now = new Date();
+        const filteredQuizzes = response.data.filter(
+            (quiz) => new Date(quiz.registration_deadline) >= now
+        );
+        
+        setQuizzes(filteredQuizzes); // Set filtered quizzes to state
+        console.log(filteredQuizzes);
+    } catch (err) {
+        setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+    }
+};
+
+const fetchInitQuizzes = async ()=>{
+    const response = await api.get('api/quizzes/');
+    setAllQuizzes(response.data);
+    console.log(JSON.stringify(response.data));
+}
+
+useEffect(() => {
+    if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
+        || filters.is_league || filters.price.length)) { 
+        fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
+    } else {
+        fetchInitQuizzes();
+    }
+}, [filters]); // Run this effect when `filters` change
+
+
+// useEffect to fetch quizzes when there are no filters
+useEffect( () => {
+    fetchInitQuizzes()
+    
+    //fetchQuizzes(); // Call the `fetchQuizzes` function
+}, []); // Re-run whenever `filters` change
+
+    
+
+     // Update the filters when a checkbox is clicked
+     const handleCheckboxChange = (event, filterType) => {
+        const value = event.target.value;
+        const checked = event.target.checked;
+
+        setFilters(prevFilters => {
+            // For difficulty, category, and price, it's an array
+            if (filterType === 'difficulty' || filterType === 'category' || filterType === 'price') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked
+                        ? [...prevFilters[filterType], value]
+                        : prevFilters[filterType].filter(item => item !== value)
+                };
             }
-        };
-        fetchQuizzes();
-    }, []);
+
+            // For is_league and distance, they are single values (not arrays)
+            if (filterType === 'is_league' || filterType === 'distance') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked ? value : null
+                };
+            }
+
+            return prevFilters;
+        });
+    };
+
+    function buildSearchUrl(filters) {
+        let url = "?"; // Assuming your API endpoint is "/api/search/"
+        let params = [];
+    
+        if (filters.difficulty && filters.difficulty.length) {
+            params.push("difficulty=" + filters.difficulty.join(","));
+        }
+        if (filters.category && filters.category.length) {
+            params.push("category=" + filters.category.join(","));
+        }
+        if (filters.price && filters.price.length) {
+            params.push("fee_max=" + Math.max(...filters.price));
+        }
+        if (filters.is_league) {
+            params.push("is_league=" + filters.is_league);
+        }
+        if (filters.distance) {
+            params.push("distance=" + filters.distance);
+        }
+
+        console.log(url);
+        console.log(params);
+        
 
 
+    
+        // Join parameters with "&" and append to the URL
+        return params.length ? url + params.join("&") : url;
+    }
+    
+
+    
 
     const userRole = localStorage.getItem('role');
 
@@ -303,44 +413,60 @@ const QuizList = () => {
                 placeholder="Search quizzes..."
                 id="searchbar"
             />
-                <div class="filterDropdown">
-                    <button class="dropdownButton">Filter</button>
-                        <div class="dropdownContent">
-                            <div class="filterSection">
-                                <h4>Težina</h4>
-                                <label>Lagano <input type="checkbox" /></label>
-                                <label>Srednje <input type="checkbox" /></label>
-                                <label>Teško <input type="checkbox" /></label>
-                            </div>
-                                <div class="divider"></div> 
-                            <div class="filterSection">
-                                <h4>Tema</h4>
-                                <label>Sport <input type="checkbox" /></label>
-                                <label>Glazba <input type="checkbox" /></label>
-                                <label>Opće <input type="checkbox" /></label>
-                                <label>Drugo <input type="checkbox" /></label>
-                            </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
-                                <h4>Cijena</h4>
-                                <label>manje od 5 <input type="checkbox" /></label>
-                                <label>manje od 10 <input type="checkbox" /></label>
-                                <label>manje od 15 <input type="checkbox" /></label>
-                            </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
-                                <h4>Liga</h4>
-                                <label>Da <input type="checkbox" /></label>
-                                <label>Ne <input type="checkbox" /></label>
-                            </div>
-                            <div class="divider"></div>
-                            <div class="filterSection">
-                                <h4>Udaljenost</h4>
-                                <label>Najbliži <input type="checkbox" /></label>
-                                <label>Najdalji <input type="checkbox" /></label>
-                            </div>
-                        </div>
+
+<div className="filterDropdown">
+                <button className="dropdownButton">Filter</button>
+                <div className="dropdownContent">
+                    <div className="filterSection">
+                        <h4>Težina</h4>
+                        <label>Lagano <input type="checkbox" className="difficulty" value="Easy"                             
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                        <label>Srednje <input type="checkbox" className="difficulty" value="Medium" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')} /></label>
+                        <label>Teško <input type="checkbox" className="difficulty" value="Hard" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                    </div>
+                    <div className="divider"></div> 
+                    <div className="filterSection">
+                        <h4>Tema</h4>
+                        <label>Sport <input type="checkbox" className="category" value="sports" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Glazba <input type="checkbox" className="category" value="music" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Opće <input type="checkbox" className="category" value="general" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Drugo <input type="checkbox" className="category" value="other" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Cijena</h4>
+                        <label>manje od 5 <input type="checkbox" className="price" value="5" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>manje od 10 <input type="checkbox" className="price" value="10" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>manje od 15 <input type="checkbox" className="price" value="15" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Liga</h4>
+                        <label>Da <input type="checkbox" className="is_league" value="true" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                        <label>Ne <input type="checkbox" className="is_league" value="false" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Udaljenost</h4>
+                        <label>Najbliži <input type="checkbox" className="distance" value="closest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                        <label>Najdalji <input type="checkbox" className="distance" value="farthest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                    </div>
                 </div>
+            </div>
+
 
 
              
@@ -354,10 +480,11 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup & !showAllQuizzes  & !(viewReviews | viewTeams | viewUsers)&& 
+
+        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && 
         
             <div className='quizzes'>
-                {quizzes.map((quiz) => (
+                {allQuizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
@@ -389,7 +516,7 @@ const QuizList = () => {
             </div>
         }
 
-        {!showQuizPopup & showAllQuizzes && 
+        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -415,7 +542,8 @@ const QuizList = () => {
                 ))}
             </div>
         }
-
+        
+{/*         
         {!showQuizPopup & showAllQuizzes && 
         
             <div className='quizzes'>
@@ -442,7 +570,8 @@ const QuizList = () => {
                 ))}
 
             </div>
-        }
+        } */}
+
 
         {!showQuizPopup & viewUsers && 
             <div className='quizzes'>
@@ -622,10 +751,8 @@ const QuizList = () => {
             <div className='navigacija'>
                 <div className='buttons'>
 
-                    <button id='navButtons' onClick={() => handleNavigation('/quiz')}> Home</button>
+                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}>Home</button>
                     <button id='navButtons' onClick={() => handleNavigation('/archive')}> My archive</button>
-                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
-                    <button id='navButtons'> My archive</button>
                     <button id='navButtons' onClick={() => navigate('/maps')}>Maps</button>
                     {userRole === 'quizmaker' | userRole === 'admin' && (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
@@ -654,7 +781,7 @@ const QuizList = () => {
 
                     )}
                 </div>
-                <input class="locationInput" type="text" placeholder="Insert your location" />
+                <input className="locationInput" type="text" placeholder="Insert your location" />
 
 
                     <div className='contactButton'>
