@@ -279,47 +279,55 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.utils import timezone
+from django.db.models import Q
+import math
+from datetime import timedelta
+
+from .models import Quiz, User, Location
+from .serializers import QuizSerializer
+
+
 class SearchView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        # -- Step 1: Capture the current time --
-        now = timezone.now()
-
-        # -- Step 2: Extract query parameters for filters --
-        q = request.query_params.get('q', '').strip()           # Existing text search
-        lat_param = request.query_params.get('lat', None)       # User's latitude
-        lng_param = request.query_params.get('lng', None)       # User's longitude
-        distance_param = request.query_params.get('distance', None)  # Distance in kilometers
+        # 0. (Optional) Decide if you want *all* quizzes (past + future) or only future.
+        #    If you truly want ALL quizzes, comment out the line with start_time__gt=now
+        #    If you only want upcoming, keep it or make it conditional on a query param.
+        
+        # Example: We'll retrieve ALL quizzes for now:
+        quizzes_qs = Quiz.objects.all()
+        
+        # 1. Get parameters
+        q = request.query_params.get('q', '').strip()
+        lat_param = request.query_params.get('lat', None)
+        lng_param = request.query_params.get('lng', None)
+        distance_param = request.query_params.get('distance', None)
         category_param = request.query_params.get('category', None)
         difficulty_param = request.query_params.get('difficulty', None)
         fee_min_param = request.query_params.get('fee_min', None)
         fee_max_param = request.query_params.get('fee_max', None)
-        is_league_param = request.query_params.get('is_league', None)   # 'true'/'false'
+        is_league_param = request.query_params.get('is_league', None)
         max_team_members_param = request.query_params.get('max_team_members', None)
-        prizes_param = request.query_params.get('prizes', None)         # 'true'/'false'
-        show_full_param = request.query_params.get('show_full', 'true') # 'true'/'false'
+        prizes_param = request.query_params.get('prizes', None)
+        show_full_param = request.query_params.get('show_full', 'true')
 
-        # -- Step 3: Start with a base queryset of future quizzes only --
-        quizzes_qs = Quiz.objects.filter(start_time__gt=now)
+        # 2. Apply the same filters you have (category, difficulty, fee, etc.)
+        #    We'll do them step-by-step, same as before:
 
-        # -- Step 4: Text-based search (if q is provided) --
-        if q:
-            quizzes_qs = quizzes_qs.filter(
-                Q(title__icontains=q) | 
-                Q(location__name__icontains=q) |
-                Q(organizer__username__icontains=q)
-            )
-
-        # -- Step 5: Filter by category --
+        # Category
         if category_param:
             quizzes_qs = quizzes_qs.filter(category=category_param)
 
-        # -- Step 6: Filter by difficulty --
+        # Difficulty
         if difficulty_param:
             quizzes_qs = quizzes_qs.filter(difficulty__iexact=difficulty_param)
 
-        # -- Step 7: Filter by fee range (fee_min, fee_max) --
+        # Fee range
         if fee_min_param:
             try:
                 fee_min_value = float(fee_min_param)
@@ -333,16 +341,14 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # -- Step 8: Filter by is_league (if specified) --
-        # Expecting query_params like "is_league=true" or "is_league=false"
+        # is_league
         if is_league_param is not None:
             if is_league_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.filter(is_league=True)
             elif is_league_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(is_league=False)
 
-        # -- Step 9: Filter by max_team_members --
-        # E.g., if user wants quizzes allowing up to X team members, we do <= X
+        # max_team_members
         if max_team_members_param:
             try:
                 mtm_value = int(max_team_members_param)
@@ -350,50 +356,52 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # -- Step 10: Filter by prizes --
-        # If 'prizes=true', we only show quizzes that have something in the prizes field
-        # If 'prizes=false', we only show quizzes that have an empty (blank) prizes field
+        # prizes
         if prizes_param is not None:
             if prizes_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.exclude(prizes__exact='')
             elif prizes_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(prizes__exact='')
 
-        # -- Step 11: Filter out "filled" quizzes if show_full=false --
-        # A quiz is "filled" if quiz.teams.count() >= quiz.max_teams
+        # show_full (exclude filled quizzes)
         if show_full_param.lower() == 'false':
-            # show only quizzes that are *not* filled
-            filtered_ids = []
+            not_filled_ids = []
             for quiz in quizzes_qs:
                 if quiz.teams.count() < quiz.max_teams:
-                    filtered_ids.append(quiz.id)
-            quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+                    not_filled_ids.append(quiz.id)
+            quizzes_qs = quizzes_qs.filter(id__in=not_filled_ids)
 
-        # -- Step 12: Filter by distance if lat/lng/distance are given --
+        # Distance filter
         if lat_param and lng_param and distance_param:
             try:
                 user_lat = float(lat_param)
                 user_lng = float(lng_param)
                 max_distance = float(distance_param)
 
-                # We can do a naive Haversine or spherical law of cosines
-                # For simplicity, let's do a rough "distance in km" filter:
-
-                filtered_ids = []
+                within_distance_ids = []
                 for quiz in quizzes_qs:
-                    location = quiz.location
-                    if location.latitude and location.longitude:
-                        dist = self.calculate_distance(
-                            user_lat, user_lng, 
-                            location.latitude, location.longitude
-                        )
+                    loc = quiz.location
+                    if loc.latitude and loc.longitude:
+                        dist = self.calculate_distance(user_lat, user_lng, loc.latitude, loc.longitude)
                         if dist <= max_distance:
-                            filtered_ids.append(quiz.id)
-                quizzes_qs = quizzes_qs.filter(id__in=filtered_ids)
+                            within_distance_ids.append(quiz.id)
+
+                quizzes_qs = quizzes_qs.filter(id__in=within_distance_ids)
             except ValueError:
                 pass
 
-        # -- Step 13: Return final results in a structured format --
+        # 3. Filter by 'q' if not empty
+        #    We'll do a separate "full text" filter on the final quizzes_qs for 'title' or 'organizer.username'.
+        #    For location, we handle it in location_quizzes as well, but let's see if you want to apply it here too.
+        if q:
+            quizzes_qs = quizzes_qs.filter(
+                Q(title__icontains=q) |
+                Q(organizer__username__icontains=q)
+                # We *could* include Q(location__name__icontains=q) here,
+                # but we'll also do a separate location_quizzes below.
+            )
+
+        # 4. Build final "quizzes" array
         quizzes_data = []
         for quiz in quizzes_qs:
             quizzes_data.append({
@@ -412,14 +420,62 @@ class SearchView(APIView):
                 "max_team_members": quiz.max_team_members
             })
 
-        return Response({"quizzes": quizzes_data}, status=200)
+        # 5. LOCATION QUIZZES
+        #    We'll always build a location-based array. If q is empty, we return *all quizzes* again, or
+        #    if you only want location matches on `q`, we'll filter that. Let's do both:
+        location_quizzes_qs = quizzes_qs
+        if q:
+            location_quizzes_qs = location_quizzes_qs.filter(location__name__icontains=q)
+
+        location_quizzes_data = []
+        for quiz in location_quizzes_qs:
+            location_quizzes_data.append({
+                "id": quiz.id,
+                "title": quiz.title,
+                "location": quiz.location.name,
+                "start_time": quiz.start_time,
+                "organizer": quiz.organizer.username,
+                "category": quiz.category,
+                "difficulty": quiz.difficulty,
+                "fee": str(quiz.fee),
+                "is_league": quiz.is_league,
+                "prizes": quiz.prizes,
+                "teams_registered": quiz.teams.count(),
+                "max_teams": quiz.max_teams,
+                "max_team_members": quiz.max_team_members
+            })
+
+        # 6. QUIZMAKERS
+        #    If q is empty, return ALL quizmakers. If q is not empty, filter by `username__icontains=q`.
+        if q:
+            quizmakers_qs = User.objects.filter(
+                role=User.QUIZMAKER,
+                username__icontains=q
+            )
+        else:
+            quizmakers_qs = User.objects.filter(role=User.QUIZMAKER)
+
+        quizmakers_data = []
+        for user in quizmakers_qs:
+            quizmakers_data.append({
+                "id": user.id,
+                "username": user.username,
+                "role": user.role,
+                # Add more fields if needed
+            })
+
+        # 7. Return the three arrays
+        return Response({
+            "quizzes": quizzes_data,
+            "location_quizzes": location_quizzes_data,
+            "quizmakers": quizmakers_data
+        }, status=200)
 
     def calculate_distance(self, lat1, lng1, lat2, lng2):
         """
-        Calculate distance in kilometers between two lat/lng points
-        using the Haversine formula or a simplified approach.
+        Haversine or similar formula to get distance in km.
         """
-        R = 6371.0  # Radius of Earth in km
+        R = 6371.0
         lat1_radians = math.radians(lat1)
         lng1_radians = math.radians(lng1)
         lat2_radians = math.radians(lat2)
@@ -428,11 +484,10 @@ class SearchView(APIView):
         dlat = lat2_radians - lat1_radians
         dlng = lng2_radians - lng1_radians
 
-        a = (math.sin(dlat / 2) ** 2
-             + math.cos(lat1_radians) * math.cos(lat2_radians) * math.sin(dlng / 2) ** 2)
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(lat1_radians) * math.cos(lat2_radians) * math.sin(dlng / 2) ** 2)
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         distance = R * c
-
         return distance
 
 class LocationViewSet(viewsets.ModelViewSet):
