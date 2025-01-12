@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import user_icon from './user_icon.png';
 import api from '../../services/api';
-import './MyArchiveStyles.css';
 import { FaStar } from 'react-icons/fa';
-
+import './MyArchiveStyles.css';
 
 const MyArchive = () => {
     const token = localStorage.getItem('token');
@@ -15,15 +14,14 @@ const MyArchive = () => {
 
     const [archivedQuizzes, setArchivedQuizzes] = useState([]);
     const [error, setError] = useState(null);
-
-    // Local states for rating/comment
     const [ratings, setRatings] = useState({});
     const [comments, setComments] = useState({});
-
-    // This map will store quizId -> { rating, comments } for quizzes the user already reviewed
     const [submittedReviews, setSubmittedReviews] = useState({});
+    const [hover, setHover] = useState({}); // Hover state for tooltips
 
-    // Check if a quiz ended
+    const ratingDescriptions = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+
+    // Check if a quiz has ended
     const isQuizEnded = (quiz) => {
         const quizStartMs = new Date(quiz.start_time).getTime();
         const quizDurationMs = quiz.duration * 60_000;
@@ -31,11 +29,10 @@ const MyArchive = () => {
         return Date.now() >= quizEndTime;
     };
 
-    // Fetch data on mount
+    // Fetch data on component mount
     useEffect(() => {
         const fetchArchivedQuizzesAndReviews = async () => {
             try {
-                // 1) GET all teams
                 const teamsResp = await api.get('/teams/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -44,11 +41,9 @@ const MyArchive = () => {
                     return;
                 }
                 const allTeams = teamsResp.data;
-                // Filter for teams where registered_by == userId
                 const myTeams = allTeams.filter((team) => team.registered_by === userId);
                 const quizIdsIJoined = myTeams.map((t) => t.quiz);
 
-                // 2) GET all quizzes
                 const quizzesResp = await api.get('/quizzes/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -57,7 +52,6 @@ const MyArchive = () => {
                     return;
                 }
                 const allQuizzes = quizzesResp.data;
-                // ended + user joined
                 const endedAndJoined = allQuizzes.filter((q) => {
                     const joined = quizIdsIJoined.includes(q.id);
                     const ended = isQuizEnded(q);
@@ -65,16 +59,13 @@ const MyArchive = () => {
                 });
                 setArchivedQuizzes(endedAndJoined);
 
-                // 3) GET all reviews
                 const reviewsResp = await api.get('/reviews/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (reviewsResp.status === 200 && reviewsResp.data) {
-                    // Filter only reviews for this user
                     const allReviews = reviewsResp.data;
                     const myReviews = allReviews.filter((r) => r.user === userId);
 
-                    // Build a map: quizId -> {rating, comments}
                     const userReviewsMap = {};
                     myReviews.forEach((r) => {
                         userReviewsMap[r.quiz] = {
@@ -111,7 +102,6 @@ const MyArchive = () => {
                 return;
             }
 
-            // POST /reviews/
             await api.post(
                 '/reviews/',
                 {
@@ -125,7 +115,6 @@ const MyArchive = () => {
             );
 
             alert('Rating submitted successfully!');
-            // If successful, store it in local state so we hide the UI
             setSubmittedReviews((prev) => ({
                 ...prev,
                 [quizId]: {
@@ -155,8 +144,6 @@ const MyArchive = () => {
 
             <div className="quizzes">
                 {archivedQuizzes.map((quiz) => {
-                    // If we have an entry for this quiz in submittedReviews,
-                    // user has already reviewed it.
                     const alreadyReviewed = submittedReviews[quiz.id] !== undefined;
 
                     return (
@@ -188,7 +175,6 @@ const MyArchive = () => {
                                 </div>
                             ) : (
                                 <div className="rating">
-                                    <label>Rate this quiz:</label>
                                     <div className="star-rating">
                                         {[...Array(5)].map((_, index) => {
                                             const ratingValue = index + 1;
@@ -199,14 +185,32 @@ const MyArchive = () => {
                                                     size={24}
                                                     style={{
                                                         cursor: 'pointer',
-                                                        color: ratingValue <= (ratings[quiz.id] || 0) ? '#ffc107' : '#e4e5e9',
+                                                        color:
+                                                            ratingValue <=
+                                                            (ratings[quiz.id] || hover[quiz.id] || 0)
+                                                                ? '#ffc107'
+                                                                : '#e4e5e9',
                                                     }}
-                                                    onClick={() => handleRatingChange(quiz.id, ratingValue)}
+                                                    title={ratingDescriptions[ratingValue - 1]}
+                                                    onClick={() =>
+                                                        handleRatingChange(quiz.id, ratingValue)
+                                                    }
+                                                    onMouseEnter={() =>
+                                                        setHover((prev) => ({
+                                                            ...prev,
+                                                            [quiz.id]: ratingValue,
+                                                        }))
+                                                    }
+                                                    onMouseLeave={() =>
+                                                        setHover((prev) => ({
+                                                            ...prev,
+                                                            [quiz.id]: 0,
+                                                        }))
+                                                    }
                                                 />
                                             );
                                         })}
                                     </div>
-
 
                                     <label>Comments:</label>
                                     <textarea
