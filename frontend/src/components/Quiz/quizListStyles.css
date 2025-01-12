@@ -204,6 +204,27 @@ p{
     background-color: rgba(81,37,105,255);
 }
 
+.locationInput {
+  width: 65%;
+  max-width: 400px; /* Adjust width as needed */
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 50px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.3s ease;
+  height: 37px;
+}
+
+
+.locationInput:hover {
+    animation: pulse 1s infinite;
+  
+  }
+  
+
+
 .quizzes{
     padding-top: 100px;
     position: absolute;

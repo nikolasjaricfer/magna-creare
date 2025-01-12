@@ -214,6 +214,12 @@ const QuizList = () => {
                                 <label>Da <input type="checkbox" /></label>
                                 <label>Ne <input type="checkbox" /></label>
                             </div>
+                            <div class="divider"></div>
+                            <div class="filterSection">
+                                <h4>Udaljenost</h4>
+                                <label>Najbliži <input type="checkbox" /></label>
+                                <label>Najdalji <input type="checkbox" /></label>
+                            </div>
                         </div>
                 </div>
 
@@ -407,8 +413,10 @@ const QuizList = () => {
                         </button>
                     )}
                 </div>
+                <input class="locationInput" type="text" placeholder="Insert your location" />
 
-                <div className='contactButton'>
+
+                    <div className='contactButton'>
                     <button id='contacts' onClick={() => navigate('/contacts')}>
                         Developer contacts
                     </button>
