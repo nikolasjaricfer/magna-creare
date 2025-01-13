@@ -490,6 +490,8 @@ class SearchView(APIView):
         distance = R * c
         return distance
 
+from rest_framework.exceptions import ValidationError
+
 class LocationViewSet(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing location instances.
@@ -504,3 +506,21 @@ class LocationViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticated]
         return super(LocationViewSet, self).get_permissions()
+
+    def perform_create(self, serializer):
+        place_id = serializer.validated_data.get('place_id')
+        name = serializer.validated_data.get('name', '').strip()
+        address = serializer.validated_data.get('address', '').strip()
+
+        # 1) If place_id is provided, check that first
+        if place_id:
+            if Location.objects.filter(place_id=place_id).exists():
+                raise ValidationError("A location with this place_id already exists.")
+        else:
+            # 2) If place_id isn't provided or is None, check for exact match on name + address
+            if Location.objects.filter(name__iexact=name, address__iexact=address).exists():
+                raise ValidationError("A location with the same name and address already exists.")
+
+        # If no duplicates found, proceed to create the location
+        serializer.save()
+
