@@ -296,7 +296,7 @@ useEffect( () => {
         }
 
         try {
-            await api.post('api/quizzes/', {
+            const response = await api.post('api/quizzes/', {
                 title: quizTitle,
                 description: description,
                 category: category,
@@ -312,16 +312,16 @@ useEffect( () => {
                 start_time: startTime,
                 created_at: startTime, //TODO stavi created_at na pravu vrijednost
                 max_team_members: 5 //TODO stavi max_team_members na pravu vrijednost
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
                 },
-            }
-        );
-        setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
-        setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
-        setShowAllQuizzes(false);
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+            setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setShowAllQuizzes(false);
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
