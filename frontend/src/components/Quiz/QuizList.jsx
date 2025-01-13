@@ -375,7 +375,7 @@ useEffect( () => {
                 <div className="searchBar">
             <input
                 type="text"
-                placeholder="Search quizzes..."
+                placeholder="Search quizzes, QuizMakers, places..."
                 id="searchbar"
             />
 
