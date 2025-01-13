@@ -5,11 +5,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-
+from rest_framework.decorators import action
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
 from .serializers import CustomMicrosoftLoginSerializer
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 
 from django.utils import timezone
 from datetime import timedelta
@@ -104,7 +106,35 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.user.role != User.ADMIN:
             raise ValidationError("Only admins can delete a user.")
         return super().destroy(request, *args, **kwargs)
+    @action(detail=True, methods=['get'], url_path='average-score')
+    def average_score(self, request, pk=None):
+        """
+        Return the average rating from all reviews for 
+        quizzes organized by this user (if quizmaker).
+        """
+        user = self.get_object()
+        
+        # Optional: If you only want to allow this for quizmakers
+        if user.role != User.QUIZMAKER:
+            return Response({"detail": "User is not a quizmaker."}, status=400)
 
+        # Gather all quizzes organized by this user
+        quizzes = user.organized_quizzes.all()
+
+        # Gather all reviews for those quizzes and compute average rating
+        avg_result = Review.objects.filter(quiz__in=quizzes).aggregate(avg_score=Avg('rating'))
+        average_rating = avg_result.get('avg_score')
+
+        # If no reviews exist, average_rating will be None
+        if average_rating is None:
+            average_rating = 0
+
+        data = {
+            "quizmaker_id": user.id,
+            "quizmaker_username": user.username,
+            "average_score": average_rating
+        }
+        return Response(data, status=200)
 
 class QuizViewSet(viewsets.ModelViewSet):
     """
@@ -442,7 +472,7 @@ class SearchView(APIView):
                 "title": quiz.title,
                 "location": quiz.location.name,
                 "start_time": quiz.start_time,
-                "organizer": quiz.organizer.username,
+                "organizer": quiz.organizer.id,
                 "category": quiz.category,
                 "difficulty": quiz.difficulty,
                 "fee": str(quiz.fee),
@@ -450,7 +480,8 @@ class SearchView(APIView):
                 "prizes": quiz.prizes,
                 "teams_registered": quiz.teams.count(),
                 "max_teams": quiz.max_teams,
-                "max_team_members": quiz.max_team_members
+                "max_team_members": quiz.max_team_members,
+                "location_id": quiz.location.id
             })
 
         # location quizzes
@@ -467,7 +498,7 @@ class SearchView(APIView):
                 "title": quiz.title,
                 "location": quiz.location.name,
                 "start_time": quiz.start_time,
-                "organizer": quiz.organizer.username,
+                "organizer": quiz.organizer.id,
                 "category": quiz.category,
                 "difficulty": quiz.difficulty,
                 "fee": str(quiz.fee),
@@ -475,7 +506,8 @@ class SearchView(APIView):
                 "prizes": quiz.prizes,
                 "teams_registered": quiz.teams.count(),
                 "max_teams": quiz.max_teams,
-                "max_team_members": quiz.max_team_members
+                "max_team_members": quiz.max_team_members,
+                "location_id": quiz.location.id
             })
 
         # quizmakers
@@ -525,12 +557,33 @@ class LocationViewSet(viewsets.ModelViewSet):
     serializer_class = LocationSerializer
 
     def get_permissions(self):
-        # Example: only admin can delete
         if self.action == 'destroy':
             self.permission_classes = [permissions.IsAdminUser]
         else:
             self.permission_classes = [IsAuthenticated]
         return super(LocationViewSet, self).get_permissions()
+    
+    @action(detail=False, methods=['get'], url_path='by-place-id')
+    def by_place_id(self, request):
+        """
+        Custom endpoint to return a location's primary key (id)
+        given a place_id via query parameter: ?place_id=XYZ
+        """
+        place_id = request.query_params.get('place_id', '').strip()
+        if not place_id:
+            raise ValidationError("A 'place_id' query parameter is required.")
+        
+        # Attempt to find the location by place_id
+        location = get_object_or_404(Location, place_id=place_id)
+
+        # Return the DB 'id' along with any other info you want
+        data = {
+            "id": location.id,
+            "name": location.name,
+            "address": location.address,
+            "place_id": location.place_id
+        }
+        return Response(data, status=200)
     
 
 class LogoutView(APIView):
