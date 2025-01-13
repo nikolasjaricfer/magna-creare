@@ -87,6 +87,12 @@ const QuizList = () => {
         }
     };
 
+    useEffect(() => {
+        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+        setAppliedQuizzes(appliedQuizzesFromStorage);
+    }, []); // Run only once on component mount
+    
+
     
 // Function to fetch quizzes based on filters
 const fetchQuizzes = async () => {
@@ -107,6 +113,8 @@ const fetchQuizzes = async () => {
         );
         
         setQuizzes(filteredQuizzes); // Set filtered quizzes to state
+        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+        setAppliedQuizzes(appliedQuizzesFromStorage); // Update state with applied quizzes
         //console.log(filteredQuizzes);
     } catch (err) {
         setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
@@ -371,7 +379,20 @@ useEffect( () => {
                 id="searchbar"
             />
 
-        <div className="filterDropdown">
+        
+        </div>
+                
+                <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
+                    <img className='userImg' src={user_icon} alt='user_icon' />
+                </button>
+            </div>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
+        
+            <div className='quizzes'>
+                <div className="filterDropdown">
                 <button className="dropdownButton">Filter</button>
                 <div className="dropdownContent">
                     <div className="filterSection">
@@ -423,18 +444,6 @@ useEffect( () => {
                     </div>
                 </div>
             </div>
-        </div>
-                
-                <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
-                    <img className='userImg' src={user_icon} alt='user_icon' />
-                </button>
-            </div>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
-        
-            <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
@@ -449,15 +458,22 @@ useEffect( () => {
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
                         <div className='prijava'>
-                            <button 
-                                id='prijaviSe' 
-                                onClick={() => {
-                                    handleNavigation('/quiz/');
+                        <button 
+                            id='prijaviSe' 
+                            onClick={() => {
+                                if (!isAuthenticated) {
+                                    alert('You need to log in to sign up for a quiz!');
+                                    navigate('/login'); // Redirect to the login page
+                                } else {
                                     setShowTeamPopup(true); // Open the team submission popup
                                     setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
-                                }}>
-                                Sign Up
-                            </button>
+                                }
+                            }}
+                            disabled={appliedQuizzes.includes(quiz.id)} // Disable button if already applied
+                        >
+                            {appliedQuizzes.includes(quiz.id) ? 'Already Applied' : 'Sign Up'}
+</button>
+
                         </div>
                     </div>
                 ))}

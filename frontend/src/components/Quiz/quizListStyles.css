@@ -33,7 +33,6 @@
 }
 
 #searchbar:hover {
-    animation: pulse 1s infinite;
     background-color: rgba(81,37,105,255);
 }
 
@@ -43,9 +42,9 @@
 }
 
 .dropdownButton {
-    background-color: rgba(209,175,243,255);
-    color: rgb(0, 0, 0);
-    padding: 10px 20px;
+    background-color: #531b70;
+    color: white;
+    margin-left: 15px;
     border: none;
     border-radius: 25px;
     cursor: pointer;
@@ -56,8 +55,6 @@
 }
 
 .dropdownButton:hover {
-    transform: scale(1.1); /* Slight enlarging */
-    animation: pulse 1s infinite;
     background-color: rgba(81,37,105,255);
 }
 
@@ -147,7 +144,7 @@ p{
 .ime{
     font-size: 2vw;
     color: white;
-    margin-left: 5%;
+    margin-left: 1%;
 
 }
 
@@ -157,7 +154,7 @@ p{
     border-radius: 30px;
     background-color: #531b70;
     width: 20%;
-    margin: 10px 15px;
+    margin: 40px 15px;
 
 }
 
@@ -205,7 +202,7 @@ p{
 }
 
 .contactButton{
-    margin-top: 10%;
+    margin-top: 70%;
     height: 6vw;
 }
 #contacts{
@@ -243,7 +240,7 @@ p{
 
 
 .quizzes{
-    padding-top: 100px;
+    padding-top: 60px;
     position: absolute;
     height: 45vw;
     width: 50vw;
@@ -303,4 +300,15 @@ button:hover {
     100% {
         transform: scale(1);
     }
+}
+
+
+#prijaviSe:disabled {
+    cursor: not-allowed;
+}
+
+.icon{
+    height: 5vw;
+    margin-right: 0p;
+    
 }

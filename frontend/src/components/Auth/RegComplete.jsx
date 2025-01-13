@@ -151,6 +151,7 @@ const RegComplete = () =>{
                         <option value="user">User</option>
                         <option value="quizmaker">QuizMaker</option>
                     </select>
+
                 </div>
                 <button type="submit">Register</button>
             </form>
