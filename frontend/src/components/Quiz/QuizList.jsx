@@ -495,9 +495,9 @@ useEffect( () => {
                 </button>
             </div>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error ? <p style={{ color: 'red' }}>{error}</p> : null}
 
-        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
+        {!showQuizPopup & !showAllQuizzes & !(viewReviews | viewTeams | viewUsers) & !showTeamPopup ?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -513,6 +513,7 @@ useEffect( () => {
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
+
                         <div className='prijava'>
                             <button 
                                 id='prijaviSe' 
@@ -526,10 +527,10 @@ useEffect( () => {
                         </div>
                     </div>
                 ))}
-            </div>
+            </div> : null
         }
 
-        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
+        {!showQuizPopup & showAllQuizzes & allQuizzes.length ?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -553,10 +554,10 @@ useEffect( () => {
                     
                 </div>
                 ))}
-            </div>
+            </div> : null
         }
 
-        {!showQuizPopup & viewUsers && 
+        {!showQuizPopup & viewUsers ?
             <div className='quizzes'>
             {users.map((user) => (
                 <div className='kviz' key={user.id}>
@@ -575,12 +576,12 @@ useEffect( () => {
                     </button>
                 </div>
                 
-            </div>
+            </div> 
             ))}
 
-        </div>}
+        </div>: null}
 
-        {!showQuizPopup & viewTeams && 
+        {!showQuizPopup & viewTeams ?
             <div className='quizzes'>
             {teams.map((team) => (
                 <div className='kviz' key={team.id}>
@@ -600,20 +601,22 @@ useEffect( () => {
             </div>
             ))}
 
-        </div>}
+        </div>:null}
 
 
-        {!showQuizPopup & viewReviews && 
+        {!showQuizPopup & viewReviews ? 
             <div className='quizzes'>
             {reviews.map((review) => (
                 <div className='kviz' key={review.id}>
-                    <div className='nazivKviza'>{}</div>
+                    <div className='nazivKviza'>Quiz: {review.quiz}</div>
                     <div className='opisKviza'>
-                        <p className='opis'>{review.comments} </p>
                         <p className='opis'>Rating: {review.rating} </p>
+                        <p className='opis'> {review.comments} </p>	
                     </div>
                 <div className='informacije'>
-                    <p> Quiz: {review.quiz}</p>	
+                    <p >User: {review.user} </p>
+                    <p >Created at: {review.created_at} </p>
+                    
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteReview(review.id)}>
@@ -624,7 +627,7 @@ useEffect( () => {
             </div>
             ))}
 
-        </div>}
+        </div>:null}
 
             {showQuizPopup && (
                 <div className="popupOverlay">
