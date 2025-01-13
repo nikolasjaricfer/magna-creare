@@ -4,10 +4,11 @@
 
 # Ignore Python cache directories and files
 backend/api/__pycache__/
-backend/api/migrations/__pycache__/
+backend/api/migrations/__pycache__/S
 backend/backend/__pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 
 # Ignore VSCode settings
 .vscode/
