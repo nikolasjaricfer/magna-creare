@@ -9,7 +9,7 @@ import api from '../../services/api';
 import GoogleAutocomplete from '../Google/GoogleAutocomplete';
 
 const QuizList = () => {
-    const token = localStorage.getItem('token');
+    var token = localStorage.getItem('token');
 
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
@@ -29,9 +29,10 @@ const QuizList = () => {
     const [prizes, setPrizes] = useState('');
 
     const [placeDetails, setPlaceDetails] = useState({
+        placeId: "",        
         coordinates: null,
         formattedAddress: "",
-        placeId: "",        
+        name: ""
     });
 
     // For applying to a quiz
@@ -72,26 +73,54 @@ const QuizList = () => {
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
+        token = localStorage.getItem('token');
+
+        try {
+            await api.post('api/locations/', {
+                name: placeDetails.name,
+                address: placeDetails.formattedAddress,
+                latitude: placeDetails.coordinates.lat,
+                longitude: placeDetails.coordinates.lng,
+                place_id: placeDetails.placeId 
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            }
+        );
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred');
+        }
 
         try {
             await api.post('api/quizzes/', {
                 title: quizTitle,
-                location: location,
-                max_teams: maxTeams,
                 description: description,
                 category: category,
                 difficulty: difficulty,
+                location: 1, //TODO dadati lokaciju
+                max_teams: maxTeams,
                 registration_deadline: registration_deadline,
                 fee: fee,
                 duration: duration,
-                organizer: localStorage.getItem('id'), // Backend assigns the organizer automatically
+                organizer: localStorage.getItem('id'),
                 is_league: false,
                 prizes: prizes,
                 start_time: startTime,
-            });
+                created_at: startTime, //TODO stavi created_at na pravu vrijednost
+                max_team_members: 5 //TODO stavi max_team_members na pravu vrijednost
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            }
+        );
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
+
         setShowQuizPopup(false); // Close the popup after submission
     };
 
@@ -114,7 +143,6 @@ const QuizList = () => {
                 name: teamName,
                 quiz: quizIdToJoin,
                 members_count: membersCount
-          
             });
     
             setShowTeamPopup(false); // Close the team application popup on success

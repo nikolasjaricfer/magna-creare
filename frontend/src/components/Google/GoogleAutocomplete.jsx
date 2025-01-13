@@ -13,7 +13,7 @@ const GoogleAutocomplete = ({ onLocationSelect }) => {
       if (!window.google) return;
 
       const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-        fields: ["place_id", "geometry", "formatted_address"],
+        fields: ["place_id", "geometry", "formatted_address", "name"],
       });
 
       autocomplete.addListener("place_changed", () => {
@@ -27,6 +27,7 @@ const GoogleAutocomplete = ({ onLocationSelect }) => {
               lng: place.geometry.location.lng(),
             },
             formattedAddress: place.formatted_address,
+            name: place.name
           };
 
           setPlaceDetails(selectedPlace);
