@@ -69,7 +69,8 @@ const QuizList = () => {
         category: [],
         price: [],
         is_league: null,
-        distance: null
+        distance: null,
+        q: null
     })
 
     if (!isAuthenticated) {
@@ -95,6 +96,7 @@ const fetchQuizzes = async () => {
         const url = buildSearchUrl(filters); // Construct URL with filters
         //console.log(url);
         const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+        
         //console.log(url);
         //console.log(JSON.stringify(response.data))
 
@@ -121,7 +123,7 @@ const fetchInitQuizzes = async ()=>{
 
 useEffect(() => {
     if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
-        || filters.is_league || filters.price.length)) { 
+        || filters.is_league || filters.price.length || filters.q)) { 
         fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
     } else {
         fetchInitQuizzes();
@@ -185,13 +187,13 @@ useEffect( () => {
         if (filters.distance) {
             params.push("distance=" + filters.distance);
         }
+        if (filters.q) {
+            params.push("q=" + filters.q);
+        }
 
         console.log(url);
         console.log(params);
         
-
-
-    
         // Join parameters with "&" and append to the URL
         return params.length ? url + params.join("&") : url;
     }
@@ -239,6 +241,40 @@ useEffect( () => {
             fetchReviews(); // dohvacanje svih reviewa
         }, []);
     }
+
+   
+    /*
+
+    const fetchQuizzes2 = async () => {
+        try {
+            const params = new URLSearchParams(filters2).toString(); // Convert filters2 to query params
+            const url = buildSearchUrl(filters2);
+            console.log(url);
+            console.log(params);
+            
+            //const response = await api.get(`api/search?${url}`); // Send GET request with query params
+            const response = await api.get(`api/search?${url}`); // Send GET request with query params
+
+            setAllQuizzes(response.data.quizzes); // Update the state with the response data
+
+        } catch (error) {
+            console.error("Failed to fetch quizzes:", error); // Log errors for debugging
+        }
+    };
+    */
+
+   
+
+    
+
+    // Function to handle search input
+    const handleSearch = (query) => {
+    // Update the `q` field in the `filters` state
+    setFilters((prevFilters) => ({
+        ...prevFilters, // Keep other filters unchanged
+        q: query, // Update the search query
+    }));
+};
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
@@ -364,12 +400,21 @@ useEffect( () => {
         <div>
             <div className='homeTop'>
                 <h3 className='ime'>QUIZFINDER</h3>
+                
                 <div className="searchBar">
-            <input
-                type="text"
-                placeholder="Search quizzes..."
-                id="searchbar"
-            />
+                <input
+                    type="text"
+                    placeholder="Search quizzes..."
+                    id="searchbar"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") { // Check if the "Enter" key is pressed
+                            const query = e.target.value.trim(); // Get the search query and trim whitespace
+                            handleSearch(query); // Call the handleSearch function
+                            console.log(query); // Log the query for debugging
+                        }
+                    }}
+                />
+
 
         <div className="filterDropdown">
                 <button className="dropdownButton">Filter</button>
@@ -669,6 +714,7 @@ useEffect( () => {
                             Add Quiz
                         </button>
                     )}
+
 
                     {userRole === 'admin' && (<p id='adminText'> Admin functions </p>)	}
                     {userRole === 'admin' && (
