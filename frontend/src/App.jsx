@@ -10,6 +10,7 @@ import Contacts from './components/Contacts/Contacts';
 import RegComplete from './components/Auth/RegComplete';
 import LogComplete from './components/Auth/LogComplete';
 import Maps from './components/Google/GoogleMapsPage';
+import MyArchive from './components/MyArchive/MyArchive';
 
 const App = () => {
     return (
@@ -25,6 +26,7 @@ const App = () => {
                     <Route path="/regComplete" element={<RegComplete />} />
                     <Route path="/logComplete" element={<LogComplete />} />
                     <Route path="/maps" element={<Maps />} />
+                    <Route path="/my-archive" element={<MyArchive />} />
                 </Routes>
             </Router>
         </AuthProvider>

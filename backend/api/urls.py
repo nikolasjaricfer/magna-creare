@@ -13,10 +13,12 @@ from .views import (
     NotificationViewSet,
     RegisterView,
     ChangePasswordView,
+    ChangeUsernameView,
     CustomTokenObtainPairView,
     CustomMicrosoftLoginView,
     SearchView,
-    LocationViewSet
+    LocationViewSet,
+    LogoutView
 )
 
 # Create a router and register viewsets with it
@@ -34,6 +36,9 @@ urlpatterns = [
     path('', include(router.urls)),  # Include the router's URLs
     path('register/', RegisterView.as_view(), name='register'),
     path('accountManager/changePassword/', ChangePasswordView.as_view(), name='change_password'),
+    path('accountManager/changeUsername/', ChangeUsernameView.as_view(), name='change_username'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'), ####
     path('auth/', include('dj_rest_auth.urls')),  
     path('auth/registration/', include('dj_rest_auth.registration.urls')), 

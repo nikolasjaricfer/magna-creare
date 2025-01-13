@@ -1,19 +1,27 @@
-// src/components/Quiz/QuizList.js
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { Navigate, useNavigate } from 'react-router-dom';
-import user_icon from './user_icon.png'
-import './quizListStyles.css'
-import './quizStyles.css'
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import user_icon from './user_icon.png';
+import './quizListStyles.css';
+import './quizStyles.css';
 import api from '../../services/api';
+import {
+    APIProvider,
+    ControlPosition,
+    MapControl,
+    AdvancedMarker,
+    Map,
+    useMap,
+    useMapsLibrary,
+    useAdvancedMarkerRef,
+  } from "@vis.gl/react-google-maps";
 
 
 const QuizList = () => {
     const token = localStorage.getItem('token');
-
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
-
     const [showQuizPopup, setShowQuizPopup] = useState(false); // State for quiz creation popup
     const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
     const [quizTitle, setQuizTitle] = useState('');
@@ -28,6 +36,9 @@ const QuizList = () => {
     const [duration, setDuration] = useState('');
     const [organizer, setOrganizer] = useState('');
     const [prizes, setPrizes] = useState('');
+    const [appliedQuizzes, setAppliedQuizzes] = useState([]);
+    const [activeQuizzes, setActiveQuizzes] = useState([]);
+    const [archivedQuizzes, setArchivedQuizzes] = useState([]);
     const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
     // For applying to a quiz
@@ -49,37 +60,144 @@ const QuizList = () => {
     const [reviews, setReviews] = useState([]);
     const [viewReviews, setViewReviews] = useState(false);
 
+    const userRole = localStorage.getItem('role');
+    const pageLocation = useLocation();
+
+
+    const [filters, setFilters] = useState({
+        difficulty: [],
+        category: [],
+        price: [],
+        is_league: null,
+        distance: null,
+        q: null
+    })
+
     if (!isAuthenticated) {
         localStorage.clear();
         logout();
         //return <Navigate to="/login" />;
-    }
+    } 
 
-    useEffect(() => {
-        const fetchQuizzes = async () => {
-            try {
-                const response = await api.get('api/quizzes/');
-                setAllQuizzes(response.data);
-                
-                const now = new Date();
-                const filteredQuizzes = response.data.filter(quiz => 
-                    new Date(quiz.registration_deadline) >= now
-                );
-                
-                console.log(filteredQuizzes);
-                setQuizzes(filteredQuizzes); // Postavljamo kvizove u stanje
-            } catch (err) {
-                setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-            }
-        };
+        
+    const handleNavigation = (path) => {
+        if (!isAuthenticated) {
+            navigate('/login'); // Redirect to login if not authenticated
+        } else {
+            navigate(path); // Navigate to the desired path if authenticated
+        }
+    };
+
     
-        fetchQuizzes(); 
-    }, []);
+// Function to fetch quizzes based on filters
+const fetchQuizzes = async () => {
+    try {
+        //const filters = getSelectedFilters(); // Get filters dynamically
+        const url = buildSearchUrl(filters); // Construct URL with filters
+        //console.log(url);
+        const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+        
+        //console.log(url);
+        //console.log(JSON.stringify(response.data))
+
+        setAllQuizzes(response.data.quizzes); // Set all quizzes to state
+
+        // Filter quizzes based on the registration deadline
+        const now = new Date();
+        const filteredQuizzes = response.data.filter(
+            (quiz) => new Date(quiz.registration_deadline) >= now
+        );
+        
+        setQuizzes(filteredQuizzes); // Set filtered quizzes to state
+        //console.log(filteredQuizzes);
+    } catch (err) {
+        setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+    }
+};
+
+const fetchInitQuizzes = async ()=>{
+    const response = await api.get('api/quizzes/');
+    setAllQuizzes(response.data);
+    //console.log(JSON.stringify(response.data));
+}
+
+useEffect(() => {
+    if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
+        || filters.is_league || filters.price.length || filters.q)) { 
+        fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
+    } else {
+        fetchInitQuizzes();
+    }
+}, [filters]); // Run this effect when `filters` change
 
 
+// useEffect to fetch quizzes when there are no filters
+useEffect( () => {
+    fetchInitQuizzes()
+    
+    //fetchQuizzes(); // Call the `fetchQuizzes` function
+}, []); // Re-run whenever `filters` change
 
-    const userRole = localStorage.getItem('role');
+    
 
+     // Update the filters when a checkbox is clicked
+     const handleCheckboxChange = (event, filterType) => {
+        const value = event.target.value;
+        const checked = event.target.checked;
+
+        setFilters(prevFilters => {
+            // For difficulty, category, and price, it's an array
+            if (filterType === 'difficulty' || filterType === 'category' || filterType === 'price') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked
+                        ? [...prevFilters[filterType], value]
+                        : prevFilters[filterType].filter(item => item !== value)
+                };
+            }
+
+            // For is_league and distance, they are single values (not arrays)
+            if (filterType === 'is_league' || filterType === 'distance') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked ? value : null
+                };
+            }
+
+            return prevFilters;
+        });
+    };
+
+    function buildSearchUrl(filters) {
+        let url = "?"; // Assuming your API endpoint is "/api/search/"
+        let params = [];
+    
+        if (filters.difficulty && filters.difficulty.length) {
+            params.push("difficulty=" + filters.difficulty.join(","));
+        }
+        if (filters.category && filters.category.length) {
+            params.push("category=" + filters.category.join(","));
+        }
+        if (filters.price && filters.price.length) {
+            params.push("fee_max=" + Math.max(...filters.price));
+        }
+        if (filters.is_league) {
+            params.push("is_league=" + filters.is_league);
+        }
+        if (filters.distance) {
+            params.push("distance=" + filters.distance);
+        }
+        if (filters.q) {
+            params.push("q=" + filters.q);
+        }
+
+        console.log(url);
+        console.log(params);
+        
+        // Join parameters with "&" and append to the URL
+        return params.length ? url + params.join("&") : url;
+    }
+    
     if(userRole === 'admin'){
         useEffect(() => {
             const fetchUsers = async () => {
@@ -124,10 +242,45 @@ const QuizList = () => {
         }, []);
     }
 
+   
+    /*
+
+    const fetchQuizzes2 = async () => {
+        try {
+            const params = new URLSearchParams(filters2).toString(); // Convert filters2 to query params
+            const url = buildSearchUrl(filters2);
+            console.log(url);
+            console.log(params);
+            
+            //const response = await api.get(`api/search?${url}`); // Send GET request with query params
+            const response = await api.get(`api/search?${url}`); // Send GET request with query params
+
+            setAllQuizzes(response.data.quizzes); // Update the state with the response data
+
+        } catch (error) {
+            console.error("Failed to fetch quizzes:", error); // Log errors for debugging
+        }
+    };
+    */
+
+   
+
+    
+
+    // Function to handle search input
+    const handleSearch = (query) => {
+    // Update the `q` field in the `filters` state
+    setFilters((prevFilters) => ({
+        ...prevFilters, // Keep other filters unchanged
+        q: query, // Update the search query
+    }));
+};
+
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
+
         try {
-            const response = await api.post('/quizzes/', {
+            const response = await api.post('api/quizzes/', {
                 title: quizTitle,
                 location: location,
                 max_teams: maxTeams,
@@ -153,23 +306,28 @@ const QuizList = () => {
 
     const handleTeamSubmission = async (e) => {
         e.preventDefault();
-    
+
         if (!teamName || !membersCount || !quizIdToJoin) {
             setError('Please fill in all fields correctly.');
             return;
         }
-    
+
         try {
-            await api.post('/teams/', {
+            await api.post('api/teams/', {
                 name: teamName,
                 quiz: quizIdToJoin,
-                members_count: membersCount
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                members_count: membersCount,
             });
-    
+
+            
+            // Update applied quizzes in localStorage
+            const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+            appliedQuizzesFromStorage.push(quizIdToJoin);
+            localStorage.setItem('appliedQuizzes', JSON.stringify(appliedQuizzesFromStorage));
+
+            setAppliedQuizzes(appliedQuizzesFromStorage); // Update state
+
+            alert("You have successfully applied to the quiz!");
             setShowTeamPopup(false); // Close the team application popup on success
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
@@ -242,41 +400,116 @@ const QuizList = () => {
         <div>
             <div className='homeTop'>
                 <h3 className='ime'>QUIZFINDER</h3>
-                <button id='profileButton' onClick={() => navigate('/Profile')}>
+                
+                <div className="searchBar">
+                <input
+                    type="text"
+                    placeholder="Search quizzes..."
+                    id="searchbar"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") { // Check if the "Enter" key is pressed
+                            const query = e.target.value.trim(); // Get the search query and trim whitespace
+                            handleSearch(query); // Call the handleSearch function
+                            console.log(query); // Log the query for debugging
+                        }
+                    }}
+                />
+
+
+        <div className="filterDropdown">
+                <button className="dropdownButton">Filter</button>
+                <div className="dropdownContent">
+                    <div className="filterSection">
+                        <h4>Difficulty</h4>
+                        <label>Easy <input type="checkbox" className="difficulty" value="Easy"                             
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                        <label>Medium <input type="checkbox" className="difficulty" value="Medium" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')} /></label>
+                        <label>Hard <input type="checkbox" className="difficulty" value="Hard" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                    </div>
+                    <div className="divider"></div> 
+                    <div className="filterSection">
+                        <h4>Category</h4>
+                        <label>Sports <input type="checkbox" className="category" value="sports" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Music <input type="checkbox" className="category" value="music" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>General knowledge <input type="checkbox" className="category" value="general_knowledge" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Other <input type="checkbox" className="category" value="other" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Fee</h4>
+                        <label>Less than 5 <input type="checkbox" className="price" value="5" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>Less than 10 <input type="checkbox" className="price" value="10" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>Less than 15 <input type="checkbox" className="price" value="15" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>League</h4>
+                        <label>Yes <input type="checkbox" className="is_league" value="true" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                        <label>No <input type="checkbox" className="is_league" value="false" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Distance</h4>
+                        <label>Closest <input type="checkbox" className="distance" value="closest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                        <label>Farthest <input type="checkbox" className="distance" value="farthest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+                
+                <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
                     <img className='userImg' src={user_icon} alt='user_icon' />
                 </button>
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup & !showAllQuizzes  & !(viewReviews | viewTeams | viewUsers)&& 
+
+        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
         
             <div className='quizzes'>
-                {quizzes.map((quiz) => (
+                {allQuizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
                             <p className='opis'>{quiz.description}</p>
                         </div>
                         <div className='informacije'>
-                            <p>Kategorija: {quiz.category}</p>
-                            <p>Težina: {quiz.difficulty}</p>
-                            <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
-                            <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                            
+                            <p>Category: {quiz.category}</p>
+                            <p>Difficulty: {quiz.difficulty}</p>
+                            <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
+                            <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                            <p>Duration: {quiz.duration} mins</p>                         
                         </div>
                         <div className='prijava'>
-                            <button id='prijaviSe'>
-                                Prijavi se
+                            <button 
+                                id='prijaviSe' 
+                                onClick={() => {
+                                    handleNavigation('/quiz/');
+                                    setShowTeamPopup(true); // Open the team submission popup
+                                    setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
+                                }}>
+                                Sign Up
                             </button>
                         </div>
-                        
                     </div>
                 ))}
-
             </div>
         }
 
-        {!showQuizPopup & showAllQuizzes && 
+        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -286,21 +519,20 @@ const QuizList = () => {
                             <p className='opis'>{quiz.description}</p>
                         </div>
                     <div className='informacije'>
-                        <p>Kategorija: {quiz.category}</p>
-                        <p>Težina: {quiz.difficulty}</p>
-                        <p>Početak: {new Date(quiz.start_time).toLocaleString()}</p>
-                        <p>Prijava do: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                        
+                        <p>Category: {quiz.category}</p>
+                        <p>Difficulty: {quiz.difficulty}</p>
+                        <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
+                        <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                        <p>Duration: {quiz.duration} mins</p>                                  
                     </div>
                     <div className='prijava'>
                         <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
-                            Obriši
+                            Delete
                         </button>
                     </div>
                     
                 </div>
                 ))}
-
             </div>
         }
 
@@ -319,7 +551,7 @@ const QuizList = () => {
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteUser(user.id)}>
-                        Obriši
+                        Delete
                     </button>
                 </div>
                 
@@ -334,14 +566,14 @@ const QuizList = () => {
                 <div className='kviz' key={team.id}>
                     <div className='nazivKviza'>{team.name}</div>
                     <div className='opisKviza'>
-                        <p className='opis'>Clanovi: {team.members_count}</p>
+                        <p className='opis'>Team members count: {team.members_count}</p>
                     </div>
                 <div className='informacije'>
                     <p> Quiz: {team.quiz}</p>	
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteTeam(team.id)}>
-                        Obriši
+                        Delete
                     </button>
                 </div>
                 
@@ -355,7 +587,7 @@ const QuizList = () => {
                     <div className="popupContent">
                         <h3 id='addQuizText'>Add a New Quiz</h3>
                         <form onSubmit={handleQuizSubmission}>
-                            <input
+                        <input
                                 type="text"
                                 id='quizInput'
                                 placeholder="Quiz Title"
@@ -365,19 +597,14 @@ const QuizList = () => {
                             />
                             <select value={category} onChange={(e) => setCategory(e.target.value)} required>
                                 <option value="">Select category</option>
-                                <option value="general-knowledge">General knowledge</option>
+                                <option value="general_knowledge">General knowledge</option>
                                 <option value="music">Music</option>
                                 <option value="sports">Sports</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input
-                                type="text"
-                                id='quizInput'
-                                placeholder="Location"
-                                required
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                            />
+
+                            <input placeholder='Location' />
+
                             <input
                                 type="number"
                                 id='quizInput'
@@ -441,14 +668,13 @@ const QuizList = () => {
                                 onChange={(e) => setPrizes(e.target.value)}
                             />
                             <button type="submit" id='quizButtons'>Submit Quiz</button>
-                            <button type="button" id='quizButtons' onClick={() => setShowQuizPopup(false)}>
-                                Cancel
-                            </button>
+                            <button type="button" id='quizButtons' onClick={() => setShowQuizPopup(false)}>Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
 
+            {/* Team application popup */}
             {showTeamPopup && (
                 <div className="popupOverlay">
                     <div className="popupContent">
@@ -471,26 +697,24 @@ const QuizList = () => {
                                 required
                             />
                             <button type="submit" id="quizButtons">Apply</button>
-                            <button type="button" id="quizButtons" onClick={() => setShowTeamPopup(false)}>
-                                Cancel
-                            </button>
+                            <button type="button" id="quizButtons" onClick={() => setShowTeamPopup(false)}>Cancel</button>
                         </form>
                     </div>
                 </div>
             )}
 
+            {/* Navigation */}
             <div className='navigacija'>
                 <div className='buttons'>
-
-                    <button id='navButtons' onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
-                    <button id='navButtons'> My archive</button>
-                    <button id='navButtons' onClick={() => navigate('/maps')}> Maps </button>
-
+                    <button id='navButtons' className={pageLocation.pathname === '/quiz' ? 'active' : ''} onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
+                    <button id='navButtons' className={pageLocation.pathname === '/my-archive' ? 'active' : ''} onClick={() => handleNavigation('/my-archive')}> My archive</button>
+                    <button id='navButtons' className={pageLocation.pathname === '/maps' ? 'active' : ''} onClick={() => navigate('/maps')}>Maps</button>
                     {userRole === 'quizmaker' | userRole === 'admin' && (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
                         </button>
                     )}
+
 
                     {userRole === 'admin' && (<p id='adminText'> Admin functions </p>)	}
                     {userRole === 'admin' && (
@@ -513,8 +737,10 @@ const QuizList = () => {
 
                     )}
                 </div>
+                <input className="locationInput" type="text" placeholder="Insert your location" />
 
-                <div className='contactButton'>
+
+                    <div className='contactButton'>
                     <button id='contacts' onClick={() => navigate('/contacts')}>
                         Developer contacts
                     </button>
@@ -524,4 +750,4 @@ const QuizList = () => {
     );
 };
 
-export default QuizList;  
+export default QuizList;

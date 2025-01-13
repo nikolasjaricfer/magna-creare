@@ -26,7 +26,7 @@ const Login = () => {
         setError(null);
 
         try {
-            const response = await api.post('/token/', { username, password });
+            const response = await api.post('api/token/', { username, password });
             login(response.data); // Use login from AuthContext to set tokens and state
             localStorage.setItem('username', username);
             localStorage.setItem('role', response.data.role);////////
@@ -91,6 +91,13 @@ const Login = () => {
                 <button type="submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+                <button id="guestButton" onClick={() => {
+                                                    localStorage.setItem('role', 'guest');
+                                                    navigate('/quiz');
+    }}>
+                    Continue as guest
+                </button>
+                
             </form>
             <button id="googleButton" onClick={handleMicrosoftLogin}>Login with microsoft</button>
 

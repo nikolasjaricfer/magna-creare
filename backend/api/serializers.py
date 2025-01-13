@@ -1,11 +1,12 @@
 
 from rest_framework import serializers
-from .models import User, Quiz, Team, Review, FavoriteOrganizer, Notification, Location
+from .models import User, Guest, Quiz, Team, Review, FavoriteOrganizer, Notification, Location
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-
-##
 from dj_rest_auth.registration.serializers import SocialLoginSerializer
+
+User = get_user_model()
+
 
 class CustomMicrosoftLoginSerializer(SocialLoginSerializer):
     username = serializers.CharField(required=True)
@@ -21,7 +22,6 @@ class CustomMicrosoftLoginSerializer(SocialLoginSerializer):
     def save(self, request):
         return super().save(request)
 
-##
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -42,6 +42,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
     
+class GuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Guest
+        fields = ['id', 'username', 'email', 'role']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,7 +78,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = '__all__'
-        read_only_fields = ['user', 'created_at']
+        read_only_fields = ['id', 'created_at', 'user']
+
 
 class FavoriteOrganizerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,4 +106,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
+
+
+class ChangeUsernameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username']
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
+
 

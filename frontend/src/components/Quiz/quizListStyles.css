@@ -1,14 +1,125 @@
-.homeTop{    
+
+
+.homeTop {    
     position: fixed;
     top: 0px;
     z-index: 2;
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertically centers content */
+    justify-content: space-between; /* Creates spacing between elements */
     background-color: #531b70;
-    height: 7vw;
+    height: 9vw;
     width: 100vw;
+    padding: 0 2vw; /* Adds some padding on the sides */
+    box-sizing: border-box;
+}
+
+.searchBar {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Centers both search bar and dropdown */
+    justify-content: center;
+    width: 100%;
+    gap: 1vw; /* Adds spacing between the search bar and dropdown */
+}
+
+#searchbar {
+    padding: 0.1%; /* Adds space inside the input */
+    border-radius: 25px; /* Smooth rounded edges */
+    width: 50%; /* Adjust the width of the search bar */
+    font-size: 1vw; /* Responsive font size */
+    border: 1px solid #ccc; /* Adds a border to the input */
+    outline: none; /* Removes default outline */
+}
+
+#searchbar:hover {
+    animation: pulse 1s infinite;
+    background-color: rgba(81,37,105,255);
+}
+
+.filterDropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdownButton {
+    background-color: rgba(209,175,243,255);
+    color: rgb(0, 0, 0);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1vw;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    border: 1px solid #ccc; /* Adds a border to the input */
 
 }
+
+.dropdownButton:hover {
+    transform: scale(1.1); /* Slight enlarging */
+    animation: pulse 1s infinite;
+    background-color: rgba(81,37,105,255);
+}
+
+/* Hide dropdown content initially */
+.dropdownContent {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 500px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    z-index: 1;
+    padding: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Show dropdown content when hovering over .filterDropdown */
+.filterDropdown:hover .dropdownContent {
+    display: block;
+}
+
+
+
+.filterSection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Space between items */
+    align-items: flex-start; /* Aligns items to the top-left */
+    justify-content: flex-start; /* Aligns everything to the left */
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    margin-top: 10px;
+}
+
+.divider {
+    border-top: 1px solid #ccc; /* Adds a light grey line as divider */
+    margin: 10px 0; /* Adds space above and below the divider */
+}
+
+.filterSection label {
+    align-items: center;
+    font-size: 0.9vw; /* Adjust font size */
+    gap: 8px; /* Space between text and checkbox */
+    white-space: nowrap; /* Prevents text from wrapping */
+    display: block; /* Forces each label to appear on a new line */
+    margin-bottom: 5px; /* Adds space between labels */
+}
+
+.filterSection h4 {
+    margin-bottom: 20px; /* Adds space below the <h4> */
+}
+
+.filterSection input[type="checkbox"] {
+    width: 15px; /* Adjust checkbox size */
+    height: 15px;
+    cursor: pointer;
+}
+
+
+
+
+
 
 #profileButton{
     background-color: white;
@@ -30,7 +141,7 @@ p{
 }
 
 #profileButton:hover{
-    background-color: gray;
+    background-color: rgba(81,37,105,255);
 }
 
 .ime{
@@ -43,7 +154,7 @@ p{
 .navigacija{    
     position: fixed;
     top: 7vw;
-    border-radius: 10%;
+    border-radius: 30px;
     background-color: #531b70;
     width: 20%;
     margin: 10px 15px;
@@ -72,6 +183,15 @@ p{
     font-size: 1.5vw;
 }
 
+#navButtons.active {
+    background-color: white; /* Highlight color */
+    color: #531b70;
+    font-weight: bolder;
+    width: 78%;
+    height: 3.2vw;
+    box-shadow: 0 0 8px #ae4bdf, 0 0 18px #ae4bdf, 0 0 28px #ae4bdf;
+}
+
 #quizButtons{
     font-size: 1.2vw;
     height: 2vw;
@@ -89,8 +209,8 @@ p{
     height: 6vw;
 }
 #contacts{
-    background-color: white;
-    color: #531b70;
+    background-color: rgba(164,74,213,255);
+    color: white;
     border-color: none;
     width: 75%;
     height: 3vw;
@@ -98,10 +218,32 @@ p{
 }
 
 #contacts:hover{
-    background-color: rgb(183, 180, 180);
+    background-color: rgba(81,37,105,255);
 }
 
+.locationInput {
+  width: 65%;
+  max-width: 400px; /* Adjust width as needed */
+  padding: 10px 15px;
+  font-size: 16px;
+  border-radius: 50px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 0.3s ease;
+  height: 37px;
+}
+
+
+.locationInput:hover {
+    animation: pulse 1s infinite;
+  
+  }
+  
+
+
 .quizzes{
+    padding-top: 100px;
     position: absolute;
     height: 45vw;
     width: 50vw;
@@ -114,7 +256,7 @@ p{
     position: absolute;
     width: 50%;
     margin: 2%;
-    border-radius: 30px;
+    border-radius: 40px;
     height: 30%;
 }
 
@@ -131,6 +273,10 @@ p{
 
 }
 
+.popupContent{
+    margin-top: 7vw;
+}
+
 textarea{
     font-size: 1.1vw;
     width: 50vw;
@@ -138,4 +284,23 @@ textarea{
 
 #addQuizText{
     font-size: 1.5vw;
+}
+
+
+button:hover {
+    animation: pulse 1s infinite;
+}
+
+
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
 }

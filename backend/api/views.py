@@ -14,7 +14,9 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
+from django.contrib.auth import logout
 import math
+
 from .models import (
     Quiz,
     Team,
@@ -26,6 +28,7 @@ from .models import (
 )
 from .serializers import (
     UserSerializer,
+    GuestSerializer,
     UserRegisterSerializer,
     QuizSerializer,
     TeamSerializer,
@@ -33,6 +36,7 @@ from .serializers import (
     FavoriteOrganizerSerializer,
     NotificationSerializer,
     ChangePasswordSerializer,
+    ChangeUsernameSerializer,
     LocationSerializer
 )
 
@@ -66,6 +70,15 @@ class CustomMicrosoftLoginView(SocialLoginView):
             f"access_token={access_token}&refresh_token={refresh_token}"
         )
         return HttpResponseRedirect(frontend_url)
+
+
+class GuestViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing guest instances.
+    """
+    queryset = User.objects.all()
+    serializer_class = GuestSerializer
+    permission_classes = [AllowAny]
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -278,6 +291,25 @@ class ChangePasswordView(APIView):
             return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+class ChangeUsernameView(APIView):
+    """
+    API view to change username.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+        print(user.username)
+        serializer = ChangeUsernameSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            print(user.username)
+            return Response({"success": "Username updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -499,21 +531,11 @@ class LocationViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticated]
         return super(LocationViewSet, self).get_permissions()
+    
 
-    def perform_create(self, serializer):
-        place_id = serializer.validated_data.get('place_id')
-        name = serializer.validated_data.get('name', '').strip()
-        address = serializer.validated_data.get('address', '').strip()
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        # 1) If place_id is provided, check that first
-        if place_id:
-            if Location.objects.filter(place_id=place_id).exists():
-                raise ValidationError("A location with this place_id already exists.")
-        else:
-            # 2) If place_id isn't provided or is None, check for exact match on name + address
-            if Location.objects.filter(name__iexact=name, address__iexact=address).exists():
-                raise ValidationError("A location with the same name and address already exists.")
-
-        # If no duplicates found, proceed to create the location
-        serializer.save()
-
+    def post(self, request):
+        logout(request)
+        return Response({"success": "Logged out successfully"}, status=status.HTTP_200_OK)

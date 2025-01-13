@@ -60,7 +60,7 @@ const RegComplete = () =>{
 
 
         try {
-            const response = await api.post('register/', {
+            const response = await api.post('api/register/', {
                 username,
                 email,
                 password,
