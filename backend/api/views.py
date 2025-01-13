@@ -279,61 +279,56 @@ class ChangePasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.utils import timezone
-from django.db.models import Q
-import math
-from datetime import timedelta
 
-from .models import Quiz, User, Location
-from .serializers import QuizSerializer
 
 
 class SearchView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        # 0. (Optional) Decide if you want *all* quizzes (past + future) or only future.
-        #    If you truly want ALL quizzes, comment out the line with start_time__gt=now
-        #    If you only want upcoming, keep it or make it conditional on a query param.
-        
-        # Example: We'll retrieve ALL quizzes for now:
+        now = timezone.now()
+
+        # 1. Parse param for showing past quizzes
+        show_past_param = request.query_params.get('show_past', 'false').lower()
+
+        # Start with ALL quizzes (we'll exclude finished if show_past=false at the end)
         quizzes_qs = Quiz.objects.all()
-        
-        # 1. Get parameters
+
+        # 2. Extract other query params
         q = request.query_params.get('q', '').strip()
         lat_param = request.query_params.get('lat', None)
         lng_param = request.query_params.get('lng', None)
         distance_param = request.query_params.get('distance', None)
-        category_param = request.query_params.get('category', None)
-        difficulty_param = request.query_params.get('difficulty', None)
+        category_param = request.query_params.get('category', None)    # e.g. music,sports
+        difficulty_param = request.query_params.get('difficulty', None)  # e.g. easy,hard
         fee_min_param = request.query_params.get('fee_min', None)
         fee_max_param = request.query_params.get('fee_max', None)
         is_league_param = request.query_params.get('is_league', None)
         max_team_members_param = request.query_params.get('max_team_members', None)
         prizes_param = request.query_params.get('prizes', None)
-        show_full_param = request.query_params.get('show_full', 'true')
+        show_full_param = request.query_params.get('show_full', 'true').lower()
 
-        # 2. Apply the same filters you have (category, difficulty, fee, etc.)
-        #    We'll do them step-by-step, same as before:
-
-        # Category
+        # 3. Multiple categories
         if category_param:
-            quizzes_qs = quizzes_qs.filter(category=category_param)
+            category_list = [cat.strip() for cat in category_param.split(',') if cat.strip()]
+            quizzes_qs = quizzes_qs.filter(category__in=category_list)
 
-        # Difficulty
+        # 4. Multiple difficulties
         if difficulty_param:
-            quizzes_qs = quizzes_qs.filter(difficulty__iexact=difficulty_param)
+            difficulty_list = [diff.strip() for diff in difficulty_param.split(',') if diff.strip()]
+            difficulty_q = Q()
+            for diff in difficulty_list:
+                difficulty_q |= Q(difficulty__iexact=diff)
+            quizzes_qs = quizzes_qs.filter(difficulty_q)
 
-        # Fee range
+        # 5. Fee range
         if fee_min_param:
             try:
                 fee_min_value = float(fee_min_param)
                 quizzes_qs = quizzes_qs.filter(fee__gte=fee_min_value)
             except ValueError:
                 pass
+
         if fee_max_param:
             try:
                 fee_max_value = float(fee_max_param)
@@ -341,14 +336,14 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # is_league
+        # 6. is_league
         if is_league_param is not None:
             if is_league_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.filter(is_league=True)
             elif is_league_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(is_league=False)
 
-        # max_team_members
+        # 7. max_team_members
         if max_team_members_param:
             try:
                 mtm_value = int(max_team_members_param)
@@ -356,22 +351,22 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # prizes
+        # 8. prizes
         if prizes_param is not None:
             if prizes_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.exclude(prizes__exact='')
             elif prizes_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(prizes__exact='')
 
-        # show_full (exclude filled quizzes)
-        if show_full_param.lower() == 'false':
+        # 9. show_full (exclude filled quizzes)
+        if show_full_param == 'false':
             not_filled_ids = []
             for quiz in quizzes_qs:
                 if quiz.teams.count() < quiz.max_teams:
                     not_filled_ids.append(quiz.id)
             quizzes_qs = quizzes_qs.filter(id__in=not_filled_ids)
 
-        # Distance filter
+        # 10. Distance filter
         if lat_param and lng_param and distance_param:
             try:
                 user_lat = float(lat_param)
@@ -390,18 +385,24 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # 3. Filter by 'q' if not empty
-        #    We'll do a separate "full text" filter on the final quizzes_qs for 'title' or 'organizer.username'.
-        #    For location, we handle it in location_quizzes as well, but let's see if you want to apply it here too.
-        if q:
-            quizzes_qs = quizzes_qs.filter(
-                Q(title__icontains=q) |
-                Q(organizer__username__icontains=q)
-                # We *could* include Q(location__name__icontains=q) here,
-                # but we'll also do a separate location_quizzes below.
-            )
+        # 11. Exclude finished quizzes if show_past=false
+        if show_past_param == 'false':
+            non_finished_ids = []
+            for quiz in quizzes_qs:
+                quiz_end_time = quiz.start_time + timedelta(minutes=quiz.duration)
+                if quiz_end_time > now:
+                    non_finished_ids.append(quiz.id)
+            quizzes_qs = quizzes_qs.filter(id__in=non_finished_ids)
 
-        # 4. Build final "quizzes" array
+        # 12. Multi-word search on title + organizer
+        if q:
+            words = q.split()
+            for word in words:
+                quizzes_qs = quizzes_qs.filter(
+                    Q(title__icontains=word) | Q(organizer__username__icontains=word)
+                )
+
+        # Build final quizzes array
         quizzes_data = []
         for quiz in quizzes_qs:
             quizzes_data.append({
@@ -420,12 +421,12 @@ class SearchView(APIView):
                 "max_team_members": quiz.max_team_members
             })
 
-        # 5. LOCATION QUIZZES
-        #    We'll always build a location-based array. If q is empty, we return *all quizzes* again, or
-        #    if you only want location matches on `q`, we'll filter that. Let's do both:
+        # location quizzes
         location_quizzes_qs = quizzes_qs
         if q:
-            location_quizzes_qs = location_quizzes_qs.filter(location__name__icontains=q)
+            words = q.split()
+            for word in words:
+                location_quizzes_qs = location_quizzes_qs.filter(location__name__icontains=word)
 
         location_quizzes_data = []
         for quiz in location_quizzes_qs:
@@ -445,13 +446,12 @@ class SearchView(APIView):
                 "max_team_members": quiz.max_team_members
             })
 
-        # 6. QUIZMAKERS
-        #    If q is empty, return ALL quizmakers. If q is not empty, filter by `username__icontains=q`.
+        # quizmakers
         if q:
-            quizmakers_qs = User.objects.filter(
-                role=User.QUIZMAKER,
-                username__icontains=q
-            )
+            quizmakers_qs = User.objects.filter(role=User.QUIZMAKER)
+            words = q.split()
+            for word in words:
+                quizmakers_qs = quizmakers_qs.filter(username__icontains=word)
         else:
             quizmakers_qs = User.objects.filter(role=User.QUIZMAKER)
 
@@ -461,10 +461,8 @@ class SearchView(APIView):
                 "id": user.id,
                 "username": user.username,
                 "role": user.role,
-                # Add more fields if needed
             })
 
-        # 7. Return the three arrays
         return Response({
             "quizzes": quizzes_data,
             "location_quizzes": location_quizzes_data,
@@ -472,9 +470,6 @@ class SearchView(APIView):
         }, status=200)
 
     def calculate_distance(self, lat1, lng1, lat2, lng2):
-        """
-        Haversine or similar formula to get distance in km.
-        """
         R = 6371.0
         lat1_radians = math.radians(lat1)
         lng1_radians = math.radians(lng1)
@@ -489,8 +484,6 @@ class SearchView(APIView):
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         distance = R * c
         return distance
-
-from rest_framework.exceptions import ValidationError
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
