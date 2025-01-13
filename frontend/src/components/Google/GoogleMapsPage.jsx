@@ -1,7 +1,7 @@
 //"use client";
 
 import React, { useState } from 'react';
-import {APIProvider, Map, AdvancedMarker, Pin, InfoWindow} from "@vis.gl/react-google-maps";
+import {APIProvider, Map} from "@vis.gl/react-google-maps";
 
 
 export default function Maps() {

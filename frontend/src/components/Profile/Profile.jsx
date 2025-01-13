@@ -24,9 +24,10 @@ const Profile = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await api.put(
-                'api/accountManager/changeUsername/',
-                { username: newUsername },
+            await api.put('api/accountManager/changeUsername/',
+                { 
+                    username: newUsername 
+                },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,

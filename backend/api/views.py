@@ -37,19 +37,15 @@ from .serializers import (
     NotificationSerializer,
     ChangePasswordSerializer,
     ChangeUsernameSerializer,
-    LocationSerializer
+    LocationSerializer,
+    CustomTokenObtainPairSerializer
 )
 
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import User
 
+User = get_user_model()
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['role'] = self.user.role
-        data['id'] = self.user.id
-        return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
