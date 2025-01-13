@@ -129,6 +129,7 @@
     cursor: pointer;
     position: absolute;
     right: 5vw;
+    color: black;
 }
 
 p{
@@ -258,6 +259,7 @@ p{
     margin: 2%;
     border-radius: 40px;
     height: 30%;
+    padding: 2%;
 }
 
 

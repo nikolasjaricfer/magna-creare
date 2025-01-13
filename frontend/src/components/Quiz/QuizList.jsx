@@ -340,7 +340,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this quiz?')) return; // Confirm action
     
         try {
-            await api.delete(`/quizzes/${quizId}/`, {
+            await api.delete(`/api/quizzes/${quizId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -359,7 +359,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this user?')) return; // Confirm action
     
         try {
-            await api.delete(`/users/${userId}/`, {
+            await api.delete(`/api/users/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -379,13 +379,33 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this team?')) return; // Confirm action
     
         try {
-            await api.delete(`/teams/${teamId}/`, {
+            await api.delete(`/api/teams/${teamId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
             setTeams((prevTeams) => prevTeams.filter((team) => team.id !== teamId));
+
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+            console.log(err);
+
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this review?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/api/reviews/${reviewId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
 
 
         } catch (err) {
@@ -471,13 +491,13 @@ useEffect( () => {
         </div>
                 
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
-                    <img className='userImg' src={user_icon} alt='user_icon' />
+                    {userRole === null ? "Register" : <img className='userImg' src={user_icon} alt='user_icon' />}
                 </button>
             </div>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error ? <p style={{ color: 'red' }}>{error}</p> : null}
 
-        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
+        {!showQuizPopup & !showAllQuizzes & !(viewReviews | viewTeams | viewUsers) & !showTeamPopup ?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -493,6 +513,7 @@ useEffect( () => {
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
+                    {userRole !== 'admin' & userRole !==  null? 
                         <div className='prijava'>
                             <button 
                                 id='prijaviSe' 
@@ -503,13 +524,14 @@ useEffect( () => {
                                 }}>
                                 Sign Up
                             </button>
-                        </div>
+                        </div>:null}
+                        
                     </div>
                 ))}
-            </div>
+            </div> : null
         }
 
-        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
+        {!showQuizPopup & showAllQuizzes & allQuizzes.length ?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -533,10 +555,10 @@ useEffect( () => {
                     
                 </div>
                 ))}
-            </div>
+            </div> : null
         }
 
-        {!showQuizPopup & viewUsers && 
+        {!showQuizPopup & viewUsers ?
             <div className='quizzes'>
             {users.map((user) => (
                 <div className='kviz' key={user.id}>
@@ -555,12 +577,12 @@ useEffect( () => {
                     </button>
                 </div>
                 
-            </div>
+            </div> 
             ))}
 
-        </div>}
+        </div>: null}
 
-        {!showQuizPopup & viewTeams && 
+        {!showQuizPopup & viewTeams ?
             <div className='quizzes'>
             {teams.map((team) => (
                 <div className='kviz' key={team.id}>
@@ -580,7 +602,33 @@ useEffect( () => {
             </div>
             ))}
 
-        </div>}
+        </div>:null}
+
+
+        {!showQuizPopup & viewReviews ? 
+            <div className='quizzes'>
+            {reviews.map((review) => (
+                <div className='kviz' key={review.id}>
+                    <div className='nazivKviza'>Quiz: {review.quiz}</div>
+                    <div className='opisKviza'>
+                        <p className='opis'>Rating: {review.rating} </p>
+                        <p className='opis'> {review.comments} </p>	
+                    </div>
+                <div className='informacije'>
+                    <p >User: {review.user} </p>
+                    <p >Created at: {review.created_at} </p>
+                    
+                </div>
+                <div className='prijava'>
+                    <button id='prijaviSe' onClick={() => handleDeleteReview(review.id)}>
+                        Delete
+                    </button>
+                </div>
+                
+            </div>
+            ))}
+
+        </div>:null}
 
             {showQuizPopup && (
                 <div className="popupOverlay">
