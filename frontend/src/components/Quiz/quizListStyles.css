@@ -129,6 +129,7 @@
     cursor: pointer;
     position: absolute;
     right: 5vw;
+    color: black;
 }
 
 p{

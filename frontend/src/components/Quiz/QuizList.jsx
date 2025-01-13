@@ -491,7 +491,7 @@ useEffect( () => {
         </div>
                 
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
-                    <img className='userImg' src={user_icon} alt='user_icon' />
+                    {userRole === null ? "Register" : <img className='userImg' src={user_icon} alt='user_icon' />}
                 </button>
             </div>
 
@@ -513,7 +513,7 @@ useEffect( () => {
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
-
+                    {userRole !== 'admin' & userRole !==  null? 
                         <div className='prijava'>
                             <button 
                                 id='prijaviSe' 
@@ -524,7 +524,8 @@ useEffect( () => {
                                 }}>
                                 Sign Up
                             </button>
-                        </div>
+                        </div>:null}
+                        
                     </div>
                 ))}
             </div> : null
