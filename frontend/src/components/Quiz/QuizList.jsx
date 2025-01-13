@@ -340,7 +340,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this quiz?')) return; // Confirm action
     
         try {
-            await api.delete(`/quizzes/${quizId}/`, {
+            await api.delete(`/api/quizzes/${quizId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -359,7 +359,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this user?')) return; // Confirm action
     
         try {
-            await api.delete(`/users/${userId}/`, {
+            await api.delete(`/api/users/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -379,13 +379,33 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this team?')) return; // Confirm action
     
         try {
-            await api.delete(`/teams/${teamId}/`, {
+            await api.delete(`/api/teams/${teamId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
             setTeams((prevTeams) => prevTeams.filter((team) => team.id !== teamId));
+
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+            console.log(err);
+
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this review?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/api/reviews/${reviewId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
 
 
         } catch (err) {
@@ -573,6 +593,30 @@ useEffect( () => {
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteTeam(team.id)}>
+                        Delete
+                    </button>
+                </div>
+                
+            </div>
+            ))}
+
+        </div>}
+
+
+        {!showQuizPopup & viewReviews && 
+            <div className='quizzes'>
+            {reviews.map((review) => (
+                <div className='kviz' key={review.id}>
+                    <div className='nazivKviza'>{}</div>
+                    <div className='opisKviza'>
+                        <p className='opis'>{review.comments} </p>
+                        <p className='opis'>Rating: {review.rating} </p>
+                    </div>
+                <div className='informacije'>
+                    <p> Quiz: {review.quiz}</p>	
+                </div>
+                <div className='prijava'>
+                    <button id='prijaviSe' onClick={() => handleDeleteReview(review.id)}>
                         Delete
                     </button>
                 </div>
