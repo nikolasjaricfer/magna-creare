@@ -64,6 +64,14 @@ const QuizList = () => {
     const pageLocation = useLocation();
 
 
+    const [filters, setFilters] = useState({
+        difficulty: [],
+        category: [],
+        price: [],
+        is_league: null,
+        distance: null
+    })
+
     if (!isAuthenticated) {
         localStorage.clear();
         logout();
@@ -78,69 +86,159 @@ const QuizList = () => {
             navigate(path); // Navigate to the desired path if authenticated
         }
     };
+
+    
+// Function to fetch quizzes based on filters
+const fetchQuizzes = async () => {
+    try {
+        //const filters = getSelectedFilters(); // Get filters dynamically
+        const url = buildSearchUrl(filters); // Construct URL with filters
+        //console.log(url);
+        const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+        //console.log(url);
+        //console.log(JSON.stringify(response.data))
+
+        setAllQuizzes(response.data.quizzes); // Set all quizzes to state
+
+        // Filter quizzes based on the registration deadline
+        const now = new Date();
+        const filteredQuizzes = response.data.filter(
+            (quiz) => new Date(quiz.registration_deadline) >= now
+        );
+        
+        setQuizzes(filteredQuizzes); // Set filtered quizzes to state
+        //console.log(filteredQuizzes);
+    } catch (err) {
+        setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+    }
+};
+
+const fetchInitQuizzes = async ()=>{
+    const response = await api.get('api/quizzes/');
+    setAllQuizzes(response.data);
+    //console.log(JSON.stringify(response.data));
+}
+
+useEffect(() => {
+    if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
+        || filters.is_league || filters.price.length)) { 
+        fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
+    } else {
+        fetchInitQuizzes();
+    }
+}, [filters]); // Run this effect when `filters` change
+
+
+// useEffect to fetch quizzes when there are no filters
+useEffect( () => {
+    fetchInitQuizzes()
+    
+    //fetchQuizzes(); // Call the `fetchQuizzes` function
+}, []); // Re-run whenever `filters` change
+
     
 
-    const PlaceAutocomplete = ({ onPlaceSelect }) => {
-        const [placeAutocomplete, setPlaceAutocomplete] = useState(null);
-        const inputRef = useRef(null);
-        const places = useMapsLibrary("places");
-      
-        useEffect(() => {
-          if (!places || !inputRef.current) return;
-      
-          const options = {
-            fields: ["geometry", "name", "formatted_address"],
-          };
-      
-          setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
-        }, [places]);
-        useEffect(() => {
-          if (!placeAutocomplete) return;
-      
-          placeAutocomplete.addListener("place_changed", () => {
-            onPlaceSelect(placeAutocomplete.getPlace());
-          });
-        }, [onPlaceSelect, placeAutocomplete]);
-        return (
-            <input
-            //type="text"
-            id='quizInput'
-            //placeholder="Location"
-            required
-            //value={location}
-            ref={inputRef}
-            />
-        );
+     // Update the filters when a checkbox is clicked
+     const handleCheckboxChange = (event, filterType) => {
+        const value = event.target.value;
+        const checked = event.target.checked;
+
+        setFilters(prevFilters => {
+            // For difficulty, category, and price, it's an array
+            if (filterType === 'difficulty' || filterType === 'category' || filterType === 'price') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked
+                        ? [...prevFilters[filterType], value]
+                        : prevFilters[filterType].filter(item => item !== value)
+                };
+            }
+
+            // For is_league and distance, they are single values (not arrays)
+            if (filterType === 'is_league' || filterType === 'distance') {
+                return {
+                    ...prevFilters,
+                    [filterType]: checked ? value : null
+                };
+            }
+
+            return prevFilters;
+        });
     };
 
-    useEffect(() => {
-        const fetchQuizzes = async () => {
-            try {
-                const response = await api.get('api/quizzes/', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
+    function buildSearchUrl(filters) {
+        let url = "?"; // Assuming your API endpoint is "/api/search/"
+        let params = [];
+    
+        if (filters.difficulty && filters.difficulty.length) {
+            params.push("difficulty=" + filters.difficulty.join(","));
+        }
+        if (filters.category && filters.category.length) {
+            params.push("category=" + filters.category.join(","));
+        }
+        if (filters.price && filters.price.length) {
+            params.push("fee_max=" + Math.max(...filters.price));
+        }
+        if (filters.is_league) {
+            params.push("is_league=" + filters.is_league);
+        }
+        if (filters.distance) {
+            params.push("distance=" + filters.distance);
+        }
 
-                const now = new Date();
-                const filteredQuizzes = response.data.filter(quiz => 
-                    new Date(quiz.registration_deadline) >= now
-                );
-
-                console.log(filteredQuizzes);
-                setQuizzes(filteredQuizzes); // Set quizzes state
-            } catch (err) {
-                setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-            }
-        };
-
-            // Load applied quizzes from localStorage
-        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
-        setAppliedQuizzes(appliedQuizzesFromStorage); // Update state with applied quizzes
+        console.log(url);
+        console.log(params);
+        
 
 
-        fetchQuizzes();
-    }, [token]);
+    
+        // Join parameters with "&" and append to the URL
+        return params.length ? url + params.join("&") : url;
+    }
+    
+    if(userRole === 'admin'){
+        useEffect(() => {
+            const fetchUsers = async () => {
+                try {
+                    const response = await api.get('api/users/');
+                    setUsers(response.data);
+
+                    //console.log(users);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+
+            const fetchTeams = async () => {
+                try {
+                    const response = await api.get('api/teams/');
+                    setTeams(response.data);
+
+                    //console.log(teams);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+
+            const fetchReviews = async () => {
+                try {
+                    const response = await api.get('api/reviews/');
+                    setReviews(response.data);
+
+                    //console.log(reviews);
+
+                } catch (err) {
+                    setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+                }
+            };
+        
+            fetchUsers(); // dohvacanje svih usera
+            fetchTeams(); // dohvacanje svih timova
+            fetchReviews(); // dohvacanje svih reviewa
+        }, []);
+    }
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
@@ -272,44 +370,59 @@ const QuizList = () => {
                 placeholder="Search quizzes..."
                 id="searchbar"
             />
-                <div className="filterDropdown">
-                    <button className="dropdownButton">Filter</button>
-                        <div className="dropdownContent">
-                            <div className="filterSection">
-                                <h4>Težina</h4>
-                                <label>Lagano <input type="checkbox" /></label>
-                                <label>Srednje <input type="checkbox" /></label>
-                                <label>Teško <input type="checkbox" /></label>
-                            </div>
-                                <div className="divider"></div> 
-                            <div className="filterSection">
-                                <h4>Tema</h4>
-                                <label>Sport <input type="checkbox" /></label>
-                                <label>Glazba <input type="checkbox" /></label>
-                                <label>Opće <input type="checkbox" /></label>
-                                <label>Drugo <input type="checkbox" /></label>
-                            </div>
-                            <div className="divider"></div>
-                            <div className="filterSection">
-                                <h4>Cijena</h4>
-                                <label>manje od 5 <input type="checkbox" /></label>
-                                <label>manje od 10 <input type="checkbox" /></label>
-                                <label>manje od 15 <input type="checkbox" /></label>
-                            </div>
-                            <div className="divider"></div>
-                            <div className="filterSection">
-                                <h4>Liga</h4>
-                                <label>Da <input type="checkbox" /></label>
-                                <label>Ne <input type="checkbox" /></label>
-                            </div>
-                            <div className="divider"></div>
-                            <div className="filterSection">
-                                <h4>Udaljenost</h4>
-                                <label>Najbliži <input type="checkbox" /></label>
-                                <label>Najdalji <input type="checkbox" /></label>
-                            </div>
-                        </div>
+
+        <div className="filterDropdown">
+                <button className="dropdownButton">Filter</button>
+                <div className="dropdownContent">
+                    <div className="filterSection">
+                        <h4>Difficulty</h4>
+                        <label>Easy <input type="checkbox" className="difficulty" value="Easy"                             
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                        <label>Medium <input type="checkbox" className="difficulty" value="Medium" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')} /></label>
+                        <label>Hard <input type="checkbox" className="difficulty" value="Hard" 
+                        onChange={e => handleCheckboxChange(e, 'difficulty')}/></label>
+                    </div>
+                    <div className="divider"></div> 
+                    <div className="filterSection">
+                        <h4>Category</h4>
+                        <label>Sports <input type="checkbox" className="category" value="sports" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Music <input type="checkbox" className="category" value="music" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>General knowledge <input type="checkbox" className="category" value="general_knowledge" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                        <label>Other <input type="checkbox" className="category" value="other" 
+                        onChange={e => handleCheckboxChange(e, 'category')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Fee</h4>
+                        <label>Less than 5 <input type="checkbox" className="price" value="5" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>Less than 10 <input type="checkbox" className="price" value="10" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                        <label>Less than 15 <input type="checkbox" className="price" value="15" 
+                        onChange={e => handleCheckboxChange(e, 'price')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>League</h4>
+                        <label>Yes <input type="checkbox" className="is_league" value="true" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                        <label>No <input type="checkbox" className="is_league" value="false" 
+                        onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
+                    </div>
+                    <div className="divider"></div>
+                    <div className="filterSection">
+                        <h4>Distance</h4>
+                        <label>Closest <input type="checkbox" className="distance" value="closest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                        <label>Farthest <input type="checkbox" className="distance" value="farthest" 
+                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
+                    </div>
                 </div>
+            </div>
         </div>
                 
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
@@ -318,9 +431,11 @@ const QuizList = () => {
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        {!showQuizPopup && !showAllQuizzes && !(viewReviews | viewTeams | viewUsers) && !showTeamPopup &&
+
+        {!showQuizPopup && !showAllQuizzes && !(viewReviews || viewTeams || viewUsers) && !showTeamPopup &&
+        
             <div className='quizzes'>
-                {quizzes.map((quiz) => (
+                {allQuizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
@@ -331,7 +446,7 @@ const QuizList = () => {
                             <p>Difficulty: {quiz.difficulty}</p>
                             <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                            <p>Duration: {quiz.duration} mins</p>                            
+                            <p>Duration: {quiz.duration} mins</p>                         
                         </div>
                         <div className='prijava'>
                             <button 
@@ -341,10 +456,37 @@ const QuizList = () => {
                                     setShowTeamPopup(true); // Open the team submission popup
                                     setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
                                 }}>
-                                Prijavi se
+                                Sign Up
                             </button>
                         </div>
                     </div>
+                ))}
+            </div>
+        }
+
+        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
+        
+            <div className='quizzes'>
+                {allQuizzes.map((quiz) => (
+                    <div className='kviz' key={quiz.id}>
+                        <div className='nazivKviza'>{quiz.title}</div>
+                        <div className='opisKviza'>
+                            <p className='opis'>{quiz.description}</p>
+                        </div>
+                    <div className='informacije'>
+                        <p>Category: {quiz.category}</p>
+                        <p>Difficulty: {quiz.difficulty}</p>
+                        <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
+                        <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                        <p>Duration: {quiz.duration} mins</p>                                  
+                    </div>
+                    <div className='prijava'>
+                        <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
+                            Delete
+                        </button>
+                    </div>
+                    
+                </div>
                 ))}
             </div>
         }
@@ -364,7 +506,7 @@ const QuizList = () => {
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteUser(user.id)}>
-                        Obriši
+                        Delete
                     </button>
                 </div>
                 
@@ -379,14 +521,14 @@ const QuizList = () => {
                 <div className='kviz' key={team.id}>
                     <div className='nazivKviza'>{team.name}</div>
                     <div className='opisKviza'>
-                        <p className='opis'>Clanovi: {team.members_count}</p>
+                        <p className='opis'>Team members count: {team.members_count}</p>
                     </div>
                 <div className='informacije'>
                     <p> Quiz: {team.quiz}</p>	
                 </div>
                 <div className='prijava'>
                     <button id='prijaviSe' onClick={() => handleDeleteTeam(team.id)}>
-                        Obriši
+                        Delete
                     </button>
                 </div>
                 
@@ -410,18 +552,13 @@ const QuizList = () => {
                             />
                             <select value={category} onChange={(e) => setCategory(e.target.value)} required>
                                 <option value="">Select category</option>
-                                <option value="general-knowledge">General knowledge</option>
+                                <option value="general_knowledge">General knowledge</option>
                                 <option value="music">Music</option>
                                 <option value="sports">Sports</option>
                                 <option value="other">Other</option>
                             </select>
 
-                            <APIProvider
-                                apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}
-                                solutionChannel="GMP_devsite_samples_v3_rgmautocomplete"
-                                >
-                                <PlaceAutocomplete onPlaceSelect={setLocation} />
-                            </APIProvider>
+                            <input placeholder='Location' />
 
                             <input
                                 type="number"
