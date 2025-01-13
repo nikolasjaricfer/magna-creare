@@ -27,6 +27,7 @@ const Login = () => {
 
         try {
             const response = await api.post('api/token/', { username, password });
+            //console.log(response);
             login(response.data); // Use login from AuthContext to set tokens and state
             localStorage.setItem('username', username);
             localStorage.setItem('role', response.data.role);////////

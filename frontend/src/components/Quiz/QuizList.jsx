@@ -6,26 +6,16 @@ import user_icon from './user_icon.png';
 import './quizListStyles.css';
 import './quizStyles.css';
 import api from '../../services/api';
-import {
-    APIProvider,
-    ControlPosition,
-    MapControl,
-    AdvancedMarker,
-    Map,
-    useMap,
-    useMapsLibrary,
-    useAdvancedMarkerRef,
-  } from "@vis.gl/react-google-maps";
-
+import GoogleAutocomplete from '../Google/GoogleAutocomplete';
 
 const QuizList = () => {
-    const token = localStorage.getItem('token');
+    var token = localStorage.getItem('token');
+
     const navigate = useNavigate();
     const { isAuthenticated, logout } = useContext(AuthContext);
     const [showQuizPopup, setShowQuizPopup] = useState(false); // State for quiz creation popup
     const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
     const [quizTitle, setQuizTitle] = useState('');
-    const [location, setLocation] = useState('');
     const [maxTeams, setMaxTeams] = useState('');
     const [startTime, setStartTime] = useState('');
     const [registration_deadline, setRegistration_deadline] = useState('');
@@ -40,6 +30,13 @@ const QuizList = () => {
     const [activeQuizzes, setActiveQuizzes] = useState([]);
     const [archivedQuizzes, setArchivedQuizzes] = useState([]);
     const [showAllQuizzes, setShowAllQuizzes] = useState(false);
+
+    const [placeDetails, setPlaceDetails] = useState({
+        placeId: "",        
+        coordinates: null,
+        formattedAddress: "",
+        name: ""
+    });
 
     // For applying to a quiz
     const [teamName, setTeamName] = useState('');
@@ -278,29 +275,57 @@ useEffect( () => {
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
+        token = localStorage.getItem('token');
 
         try {
-            const response = await api.post('api/quizzes/', {
-                title: quizTitle,
-                location: location,
-                max_teams: maxTeams,
-                description: description,
-                category: category,
-                difficulty: difficulty,
-                registration_deadline: registration_deadline,
-                fee: fee,
-                duration: duration,
-                organizer: localStorage.getItem('id'), // Backend assigns the organizer automatically
-                is_league: false,
-                prizes: prizes,
-                start_time: startTime,
-            });
-            setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
-            setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
-            setShowAllQuizzes(false);
+            await api.post('api/locations/', {
+                name: placeDetails.name,
+                address: placeDetails.formattedAddress,
+                latitude: placeDetails.coordinates.lat,
+                longitude: placeDetails.coordinates.lng,
+                place_id: placeDetails.placeId 
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            }
+        );
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
+
+        try {
+            await api.post('api/quizzes/', {
+                title: quizTitle,
+                description: description,
+                category: category,
+                difficulty: difficulty,
+                location: 1, //TODO dadati lokaciju
+                max_teams: maxTeams,
+                registration_deadline: registration_deadline,
+                fee: fee,
+                duration: duration,
+                organizer: localStorage.getItem('id'),
+                is_league: false,
+                prizes: prizes,
+                start_time: startTime,
+                created_at: startTime, //TODO stavi created_at na pravu vrijednost
+                max_team_members: 5 //TODO stavi max_team_members na pravu vrijednost
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            }
+        );
+        setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+        setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+        setShowAllQuizzes(false);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred');
+        }
+
         setShowQuizPopup(false); // Close the popup after submission
     };
 
@@ -603,7 +628,7 @@ useEffect( () => {
                                 <option value="other">Other</option>
                             </select>
 
-                            <input placeholder='Location' />
+                            <GoogleAutocomplete onLocationSelect={setPlaceDetails}/>
 
                             <input
                                 type="number"
