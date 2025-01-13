@@ -8,6 +8,7 @@ backend/api/migrations/__pycache__/
 backend/backend/__pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 
 # Ignore VSCode settings
 .vscode/

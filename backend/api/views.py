@@ -342,11 +342,13 @@ class SearchView(APIView):
 
         # -- Step 4: Text-based search (if q is provided) --
         if q:
+            print(q)
             quizzes_qs = quizzes_qs.filter(
                 Q(title__icontains=q) | 
                 Q(location__name__icontains=q) |
                 Q(organizer__username__icontains=q)
             )
+            
 
         # -- Step 5: Filter by category --
         if category_param:
@@ -440,7 +442,7 @@ class SearchView(APIView):
                 "title": quiz.title,
                 "location": quiz.location.name,
                 "start_time": quiz.start_time,
-                "organizer": quiz.organizer.username,
+                "organizer": quiz.organizer.id,
                 "category": quiz.category,
                 "difficulty": quiz.difficulty,
                 "fee": str(quiz.fee),

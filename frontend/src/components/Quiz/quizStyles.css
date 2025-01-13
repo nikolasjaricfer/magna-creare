@@ -39,6 +39,9 @@
 .prijava{
     position: relative;
     top: 5%; 
+    display: flex; /* Use flexbox to align items horizontally */
+    gap: 10px; /* Add space between the buttons */
+    align-items: center; /* Align items vertically if needed */
 }
 #prijaviSe{
     font-size: 1.3vw;

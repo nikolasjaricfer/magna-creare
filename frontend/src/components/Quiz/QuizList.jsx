@@ -63,13 +63,36 @@ const QuizList = () => {
     const userRole = localStorage.getItem('role');
     const pageLocation = useLocation();
 
+    const [quizMakerInfo, setQuizMakerInfo] = useState(null); // To store quizmaker info
+    const [showQuizMakerPopup, setShowQuizMakerPopup] = useState(false);
+
+    const handleShowQuizMaker = async (organizerId) => {
+        try {
+            const isUsername = isNaN(organizerId); // If not a number, it's likely a username
+
+            // Make the API call
+            const response = await api.get(`/api/users/${organizerId}/`);            
+            setQuizMakerInfo(response.data); // Store quizmaker details
+            setShowQuizMakerPopup(true); // Show the popup
+        } catch (err) {
+            setError('Failed to fetch quizmaker info.');
+        }
+    };
+
+    // Close the popup
+    const handleClosePopup = () => {
+        setShowQuizMakerPopup(false);
+        setQuizMakerInfo(null);
+    };
+
 
     const [filters, setFilters] = useState({
         difficulty: [],
         category: [],
         price: [],
         is_league: null,
-        distance: null
+        distance: null,
+        q: null
     })
 
     if (!isAuthenticated) {
@@ -101,6 +124,7 @@ const fetchQuizzes = async () => {
         const url = buildSearchUrl(filters); // Construct URL with filters
         //console.log(url);
         const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+        
         //console.log(url);
         //console.log(JSON.stringify(response.data))
 
@@ -129,7 +153,7 @@ const fetchInitQuizzes = async ()=>{
 
 useEffect(() => {
     if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
-        || filters.is_league || filters.price.length)) { 
+        || filters.is_league || filters.price.length || filters.q)) { 
         fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
     } else {
         fetchInitQuizzes();
@@ -193,13 +217,13 @@ useEffect( () => {
         if (filters.distance) {
             params.push("distance=" + filters.distance);
         }
+        if (filters.q) {
+            params.push("q=" + filters.q);
+        }
 
         console.log(url);
         console.log(params);
         
-
-
-    
         // Join parameters with "&" and append to the URL
         return params.length ? url + params.join("&") : url;
     }
@@ -247,6 +271,40 @@ useEffect( () => {
             fetchReviews(); // dohvacanje svih reviewa
         }, []);
     }
+
+   
+    /*
+
+    const fetchQuizzes2 = async () => {
+        try {
+            const params = new URLSearchParams(filters2).toString(); // Convert filters2 to query params
+            const url = buildSearchUrl(filters2);
+            console.log(url);
+            console.log(params);
+            
+            //const response = await api.get(`api/search?${url}`); // Send GET request with query params
+            const response = await api.get(`api/search?${url}`); // Send GET request with query params
+
+            setAllQuizzes(response.data.quizzes); // Update the state with the response data
+
+        } catch (error) {
+            console.error("Failed to fetch quizzes:", error); // Log errors for debugging
+        }
+    };
+    */
+
+   
+
+    
+
+    // Function to handle search input
+    const handleSearch = (query) => {
+    // Update the `q` field in the `filters` state
+    setFilters((prevFilters) => ({
+        ...prevFilters, // Keep other filters unchanged
+        q: query, // Update the search query
+    }));
+};
 
     const handleQuizSubmission = async (e) => {
         e.preventDefault();
@@ -372,12 +430,21 @@ useEffect( () => {
         <div>
             <div className='homeTop'>
                 <h3 className='ime'>QUIZFINDER</h3>
+                
                 <div className="searchBar">
-            <input
-                type="text"
-                placeholder="Search quizzes, QuizMakers, places..."
-                id="searchbar"
-            />
+                <input
+                    type="text"
+                    placeholder="Search quizzes..."
+                    id="searchbar"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") { // Check if the "Enter" key is pressed
+                            const query = e.target.value.trim(); // Get the search query and trim whitespace
+                            handleSearch(query); // Call the handleSearch function
+                            console.log(query); // Log the query for debugging
+                        }
+                    }}
+                />
+
 
         
         </div>
@@ -472,11 +539,44 @@ useEffect( () => {
                             disabled={appliedQuizzes.includes(quiz.id)} // Disable button if already applied
                         >
                             {appliedQuizzes.includes(quiz.id) ? 'Already Applied' : 'Sign Up'}
-</button>
+                        </button>
+
+                        <button
+                            id='prijaviSe'
+                            onClick={() => handleShowQuizMaker(quiz.organizer)}
+                        >
+                            Show QuizMaker Info
+                        </button>
+
 
                         </div>
                     </div>
                 ))}
+
+                {showQuizMakerPopup && quizMakerInfo && (
+                <div
+                    className="popupOverlayInfo"
+                    onClick={handleClosePopup} // Close popup on clicking outside
+                >
+                    <div
+                        className="popupContentInfo"
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                    >
+                        <h3>QuizMaker Info</h3>
+                        <p><strong>Name:</strong> {quizMakerInfo.username}</p>
+                        <p><strong>Email:</strong> {quizMakerInfo.email}</p>
+                        <p>
+                            <strong>Average Rating:</strong>{' '}
+                            {quizMakerInfo.average_rating
+                                ? `${quizMakerInfo.average_rating.toFixed(1)} / 5`
+                                : 'No reviews yet'}
+                        </p>
+                        <button onClick={handleClosePopup}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
             </div>
         }
 
@@ -494,7 +594,22 @@ useEffect( () => {
                         <p>Difficulty: {quiz.difficulty}</p>
                         <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
                         <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                        <p>Duration: {quiz.duration} mins</p>                                  
+                        <p>Duration: {quiz.duration} mins</p> 
+                        <p>Organizer: {quiz.organizer}</p> 
+                        
+                                                        
+                    </div>
+
+                    <div className="reviews">
+                        <h4>Reviews for {quiz.organizer}:</h4>
+                        {reviews
+                            .filter((review) => review.quiz === quiz.id) // Filter reviews for the current quiz
+                            .map((review) => (
+                                <div key={review.id} className="review">
+                                    <p><strong>Rating:</strong> {review.rating}/5</p>
+                                    <p><strong>Comment:</strong> {review.comments}</p>
+                                </div>
+                            ))}
                     </div>
                     <div className='prijava'>
                         <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
@@ -685,6 +800,7 @@ useEffect( () => {
                             Add Quiz
                         </button>
                     )}
+
 
                     {userRole === 'admin' && (<p id='adminText'> Admin functions </p>)	}
                     {userRole === 'admin' && (

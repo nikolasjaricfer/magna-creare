@@ -307,8 +307,39 @@ button:hover {
     cursor: not-allowed;
 }
 
-.icon{
-    height: 5vw;
-    margin-right: 0p;
-    
+
+
+.popupOverlayInfo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it appears above all other content */
 }
+
+.popupContentInfo {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%; /* For smaller screens */
+    position: relative;
+    z-index: 1010; /* Ensure it stays above the overlay */
+}
+
+.closePopupInfo {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
