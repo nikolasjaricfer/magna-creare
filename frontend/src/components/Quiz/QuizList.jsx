@@ -100,7 +100,7 @@ const fetchQuizzes = async () => {
         //console.log(url);
         //console.log(JSON.stringify(response.data))
 
-        setAllQuizzes(response.data.quizzes); // Set all quizzes to state
+        setQuizzes(response.data.quizzes); // Set all quizzes to state
 
         // Filter quizzes based on the registration deadline
         const now = new Date();
@@ -118,7 +118,11 @@ const fetchQuizzes = async () => {
 const fetchInitQuizzes = async ()=>{
     const response = await api.get('api/quizzes/');
     setAllQuizzes(response.data);
-    //console.log(JSON.stringify(response.data));
+   // console.log(response.data);
+    const now = new Date();
+    setQuizzes(response.data.filter((quiz) => new Date(quiz.registration_deadline) >= now));
+    console.log((response.data));
+    console.log("Filtirani kvizovi: " + quizzes);
 }
 
 useEffect(() => {
@@ -136,7 +140,7 @@ useEffect( () => {
     fetchInitQuizzes()
     
     //fetchQuizzes(); // Call the `fetchQuizzes` function
-}, []); // Re-run whenever `filters` change
+}, []); 
 
     
 
@@ -500,7 +504,7 @@ useEffect( () => {
         {!showQuizPopup & !showAllQuizzes & !(viewReviews | viewTeams | viewUsers) & !showTeamPopup ?
         
             <div className='quizzes'>
-                {allQuizzes.map((quiz) => (
+                {quizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
@@ -513,7 +517,7 @@ useEffect( () => {
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
-                    {userRole !== 'admin' & userRole !==  null? 
+                    {userRole !== 'admin' ? 
                         <div className='prijava'>
                             <button 
                                 id='prijaviSe' 
@@ -531,7 +535,7 @@ useEffect( () => {
             </div> : null
         }
 
-        {!showQuizPopup & showAllQuizzes & allQuizzes.length ?
+        {!showQuizPopup & showAllQuizzes & allQuizzes.length > 0?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
