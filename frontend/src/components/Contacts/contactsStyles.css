@@ -1,15 +1,40 @@
 .contacts{
 
     text-align: center;
-
     font-size: 1vw;
 }
-
 
 #teamLead{
     text-decoration: underline;
 }
 
+/* Make the team lead bold */
+#teamLeadName {
+    font-weight: bold;
+}
+
+/* Make all team members bold */
+#teamMember {
+    font-weight: bold;
+}
+
 #team{
     text-decoration: underline ;
+}
+
+.teamPicture {
+    text-align: center; /* Center the image within the div */
+    margin: 20px 0; /* Add some spacing around the image */
+}
+
+.teamImage {
+    width: 330px; /* Set the width of the image */
+    height: auto; /* Maintain the aspect ratio */
+    border-radius: 10px; /* Add rounded corners */
+    transition: transform 0.3s ease; /* Add a hover effect */
+}
+
+.teamImage:hover {
+    transform: scale(1.05); /* Slightly enlarge the image on hover */
+    cursor: pointer; /* Change the cursor to a pointer on hover */
 }
