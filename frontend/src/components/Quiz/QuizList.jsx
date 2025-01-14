@@ -303,7 +303,7 @@ useEffect( () => {
         token = localStorage.getItem('token');
 
         try {
-            await api.post('api/locations/', {
+            const response = await api.post('api/locations/', {
                 name: placeDetails.name,
                 address: placeDetails.formattedAddress,
                 latitude: placeDetails.coordinates.lat,
@@ -316,6 +316,7 @@ useEffect( () => {
                 },
             }
         );
+        console.log(response);
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
@@ -335,7 +336,7 @@ useEffect( () => {
                 is_league: false,
                 prizes: prizes,
                 start_time: startTime,
-                created_at: startTime, //TODO stavi created_at na pravu vrijednost
+                //created_at: startTime, //TODO stavi created_at na pravu vrijednost
                 max_team_members: 5 //TODO stavi max_team_members na pravu vrijednost
                 },
                 {
