@@ -10,6 +10,72 @@
     text-align: center;
 }
 
+
+/* DropdownInfo container */
+.dropdownInfo {
+    position: relative;
+    display: inline-block;
+}
+
+/* DropdownInfo button */
+.dropdownInfoButton {
+    background-color: rgba(164,74,213,255);
+    color: white;
+    padding: 10px 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 50px;
+    font-size: 15px;
+}
+
+/* DropdownInfo content (hidden by default) */
+.dropdownInfoContent {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 90%;
+    margin-left: 5%;
+    min-height: 100%;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 50px;
+    padding: 10px;
+}
+
+/* DropdownInfo links */
+.dropdownInfoContent a {
+    color: black;
+    padding: 10px 12px;
+    text-decoration: none;
+    display: block;
+    border-bottom: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* Add hover effect to DropdownInfo links */
+.dropdownInfoContent a:hover {
+    background-color: #f1f1f1;
+}
+
+.info-text {
+    background-color: #ffffff; /* Bijela pozadina */
+    border-radius: 10px; /* Zaobljeni rubovi */
+    padding: 15px; /* Unutarnji razmak */
+    margin: 20px auto; /* Vanjski razmak i centriranje */
+    max-width: 80%; /* Maksimalna širina */
+    font-size: 16px; /* Veličina fonta */
+    color: #000000; /* Tamnosiva boja teksta */
+}
+
+
+
+
+/* Show DropdownInfo when active */
+.dropdownInfoContent.show {
+    display: block;
+}
+
+
 h2{
     display: flex;
     flex-direction: column;

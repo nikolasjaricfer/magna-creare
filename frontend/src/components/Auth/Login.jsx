@@ -10,6 +10,10 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
+
+
+    
     const navigate = useNavigate();
     const { login } = useContext(AuthContext); // Get login function from AuthContext
 
@@ -64,9 +68,61 @@ const Login = () => {
 
     }
 
+         // Function to toggle the dropdown visibility
+    const toggleDropdownInfo = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
+    
+
     return (
         <div className="container">
-            <h2>Login</h2>
+            <h2>Login - QuizFinder</h2>
+            
+               {/* Dropdown Info Section */}
+               <div className="dropdownInfo">
+                <button
+                    className="dropdownInfoButton"
+                    onClick={toggleDropdownInfo}
+                >
+                    More Info
+                </button>
+                {/* Conditionally show dropdown content */}
+                
+                {isDropdownOpen && 
+                <div className='info-text'> 
+                   <h1>Welcome to QuizFinder</h1>
+                        <p>QuizFinder is a unique platform designed for pub quiz enthusiasts and organizers who want to expand their audience. Our application offers:</p>
+
+                        <ul>
+                            <strong>For quiz enthusiasts:</strong>
+                            <ul>
+                                <li>Easy quiz search by location, category, and difficulty.</li>
+                                <li>Display of all available quizzes on an interactive map through Google Maps integration.</li>
+                                <li>Option to apply and leave a review of the quiz.</li>
+                            </ul>
+                            <br></br>
+                            
+                            <strong>For organizers:</strong>
+                            <ul>
+                                <li>Quick and easy quiz publishing of information.</li>
+                                <li>Ability to get feedback on quizzes via reviews.</li>
+                                <li>Tracking the number of registrations and participant interest.</li>
+                            </ul>
+                        </ul>
+                        <br></br>
+                        <p>Join the QuizFinder community and make your quiz experience unforgettable!</p>
+                        <p><em>Your new favorite quiz destination - <strong>QuizFinder.</strong></em></p>
+
+                </div>
+                }
+                 
+                        
+                    
+                
+               
+        </div>
+
+
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <form onSubmit={handleSubmit}>
                 <div className="username">
