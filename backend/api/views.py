@@ -30,7 +30,6 @@ from .models import (
 )
 from .serializers import (
     UserSerializer,
-    GuestSerializer,
     UserRegisterSerializer,
     QuizSerializer,
     TeamSerializer,
