@@ -26,22 +26,6 @@ class User(AbstractUser):
     
 
 
-class Guest(models.Model):
-    username = models.CharField(max_length=150, unique=True, blank=True)  # Allow blank for auto-generation
-    email = models.EmailField(blank=True, null=True)
-    role = models.CharField(max_length=10, default='guest', editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_active = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.username:
-            self.username = f"guest_{get_random_string(8)}"  # Generate a random username
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.username
-
-
 
 class Role(models.Model):
     role_name = models.CharField(max_length=50)
@@ -55,7 +39,7 @@ class Location(models.Model):
     address = models.CharField(max_length=500, blank=True, null=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    place_id = models.CharField(max_length=100, unique=True, blank=True, null=True)  # For Google Maps
+    place_id = models.CharField(max_length=100, unique=True, blank=True, null=True) 
     
     def __str__(self):
         return self.name
@@ -75,7 +59,7 @@ class Quiz(models.Model):
     max_teams = models.IntegerField()
     registration_deadline = models.DateTimeField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
-    duration = models.IntegerField()  # Duration in minutes
+    duration = models.IntegerField() 
     organizer = models.ForeignKey('User', on_delete=models.CASCADE, related_name='organized_quizzes')
     is_league = models.BooleanField(default=False)
     prizes = models.TextField(blank=True)
@@ -99,7 +83,7 @@ class Team(models.Model):
 class Review(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey('User', on_delete=models.CASCADE)
-    rating = models.IntegerField()  # Rating from 1 to 5
+    rating = models.IntegerField() 
     comments = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

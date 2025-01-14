@@ -1,5 +1,5 @@
 
-# api/urls.py
+
 
 
 from django.urls import path, include
@@ -21,7 +21,7 @@ from .views import (
     LogoutView
 )
 
-# Create a router and register viewsets with it
+
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'quizzes', QuizViewSet)
@@ -31,7 +31,7 @@ router.register(r'favorites', FavoriteOrganizerViewSet)
 router.register(r'notifications', NotificationViewSet)
 router.register(r'locations', LocationViewSet)
 
-# Define URL patterns
+
 urlpatterns = [
     path('', include(router.urls)),  # Include the router's URLs
     path('register/', RegisterView.as_view(), name='register'),

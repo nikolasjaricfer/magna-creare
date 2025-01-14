@@ -74,58 +74,37 @@ class CustomMicrosoftLoginView(SocialLoginView):
         return HttpResponseRedirect(frontend_url)
 
 
-class GuestViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing guest instances.
-    """
-    queryset = User.objects.all()
-    serializer_class = GuestSerializer
-    permission_classes = [AllowAny]
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing user instances.
-    Only Admin can view all users or delete them.
-    Users can update their own user object, but cannot delete other users.
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
-        # Only allow the user themselves or admin to update
+        
         instance = self.get_object()
         if request.user.role != User.ADMIN and instance != request.user:
             raise ValidationError("You do not have permission to edit this user.")
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        # Only admin can delete a user
         instance = self.get_object()
         if request.user.role != User.ADMIN:
             raise ValidationError("Only admins can delete a user.")
         return super().destroy(request, *args, **kwargs)
     @action(detail=True, methods=['get'], url_path='average-score')
     def average_score(self, request, pk=None):
-        """
-        Return the average rating from all reviews for 
-        quizzes organized by this user (if quizmaker).
-        """
         user = self.get_object()
         
-        # Optional: If you only want to allow this for quizmakers
         if user.role != User.QUIZMAKER:
             return Response({"detail": "User is not a quizmaker."}, status=400)
 
-        # Gather all quizzes organized by this user
         quizzes = user.organized_quizzes.all()
 
-        # Gather all reviews for those quizzes and compute average rating
         avg_result = Review.objects.filter(quiz__in=quizzes).aggregate(avg_score=Avg('rating'))
         average_rating = avg_result.get('avg_score')
 
-        # If no reviews exist, average_rating will be None
         if average_rating is None:
             average_rating = 0
 
@@ -137,44 +116,31 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(data, status=200)
 
 class QuizViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing quiz instances.
-    - Admin can do anything (create, edit, delete).
-    - Quizmaker can create quizzes, edit/delete only their own.
-    - Regular users can read only.
-    """
+
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        # Admin or quizmaker can create
         if self.request.user.role not in [User.QUIZMAKER, User.ADMIN]:
             raise ValidationError("Only quizmakers or admins can create quizzes.")
         serializer.save(organizer=self.request.user)
 
     def perform_update(self, serializer):
         quiz = self.get_object()
-        # Only admin or the quiz's organizer can update
         if self.request.user.role != User.ADMIN and quiz.organizer != self.request.user:
             raise ValidationError("You do not have permission to edit this quiz.")
         serializer.save()
 
     def destroy(self, request, *args, **kwargs):
         quiz = self.get_object()
-        # Only admin or the quiz's organizer can delete
         if request.user.role != User.ADMIN and quiz.organizer != request.user:
             raise ValidationError("You do not have permission to delete this quiz.")
         return super().destroy(request, *args, **kwargs)
 
 
 class TeamViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing team instances.
-    - Anyone can read if authenticated.
-    - Users can create teams to sign up for a quiz (not if they are the quizmaker of that quiz).
-    - Only the user who registered the team, OR the quiz's organizer, OR an admin can update/delete the team.
-    """
+
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated]
@@ -184,7 +150,6 @@ class TeamViewSet(viewsets.ModelViewSet):
         quiz = serializer.validated_data.get('quiz')
         members_count = serializer.validated_data.get('members_count')
 
-        # Quizmaker cannot sign up for their own quiz
         if user.role == User.QUIZMAKER and quiz.organizer == user:
             raise ValidationError("Quiz makers cannot sign up for their own quizzes.")
 
@@ -201,7 +166,6 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         team = self.get_object()
-        # Only admin, the user who registered, or the quiz's organizer can edit
         if (
             self.request.user.role != User.ADMIN
             and team.registered_by != self.request.user
@@ -212,7 +176,6 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         team = self.get_object()
-        # Only admin, the user who registered, or the quiz's organizer can delete
         if (
             request.user.role != User.ADMIN
             and team.registered_by != request.user
@@ -223,11 +186,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing review instances.
-    - Only the user who wrote the review or an admin can edit/delete it.
-    - The user must have attended the quiz and the quiz must have ended before creating a review.
-    """
+
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
@@ -260,9 +219,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class FavoriteOrganizerViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing favorite organizer instances.
-    """
+
     queryset = FavoriteOrganizer.objects.all()
     serializer_class = FavoriteOrganizerSerializer
     permission_classes = [IsAuthenticated]
@@ -272,9 +229,7 @@ class FavoriteOrganizerViewSet(viewsets.ModelViewSet):
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing notification instances.
-    """
+
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
@@ -284,9 +239,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 class RegisterView(generics.CreateAPIView):
-    """
-    API view to register a new user.
-    """
+
     queryset = User.objects.all()
     permission_classes = [AllowAny]
     serializer_class = UserRegisterSerializer
@@ -309,9 +262,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ChangePasswordView(APIView):
-    """
-    API view to change password.
-    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -324,9 +275,7 @@ class ChangePasswordView(APIView):
 
 
 class ChangeUsernameView(APIView):
-    """
-    API view to change username.
-    """
+
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
@@ -350,19 +299,19 @@ class SearchView(APIView):
     def get(self, request):
         now = timezone.now()
 
-        # 1. Parse param for showing past quizzes
+
         show_past_param = request.query_params.get('show_past', 'false').lower()
 
-        # Start with ALL quizzes (we'll exclude finished if show_past=false at the end)
+
         quizzes_qs = Quiz.objects.all()
 
-        # 2. Extract other query params
+
         q = request.query_params.get('q', '').strip()
         lat_param = request.query_params.get('lat', None)
         lng_param = request.query_params.get('lng', None)
         distance_param = request.query_params.get('distance', None)
-        category_param = request.query_params.get('category', None)    # e.g. music,sports
-        difficulty_param = request.query_params.get('difficulty', None)  # e.g. easy,hard
+        category_param = request.query_params.get('category', None)    
+        difficulty_param = request.query_params.get('difficulty', None)  
         fee_min_param = request.query_params.get('fee_min', None)
         fee_max_param = request.query_params.get('fee_max', None)
         is_league_param = request.query_params.get('is_league', None)
@@ -370,12 +319,10 @@ class SearchView(APIView):
         prizes_param = request.query_params.get('prizes', None)
         show_full_param = request.query_params.get('show_full', 'true').lower()
 
-        # 3. Multiple categories
         if category_param:
             category_list = [cat.strip() for cat in category_param.split(',') if cat.strip()]
             quizzes_qs = quizzes_qs.filter(category__in=category_list)
 
-        # 4. Multiple difficulties
         if difficulty_param:
             difficulty_list = [diff.strip() for diff in difficulty_param.split(',') if diff.strip()]
             difficulty_q = Q()
@@ -383,7 +330,6 @@ class SearchView(APIView):
                 difficulty_q |= Q(difficulty__iexact=diff)
             quizzes_qs = quizzes_qs.filter(difficulty_q)
 
-        # 5. Fee range
         if fee_min_param:
             try:
                 fee_min_value = float(fee_min_param)
@@ -398,14 +344,12 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # 6. is_league
         if is_league_param is not None:
             if is_league_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.filter(is_league=True)
             elif is_league_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(is_league=False)
 
-        # 7. max_team_members
         if max_team_members_param:
             try:
                 mtm_value = int(max_team_members_param)
@@ -413,14 +357,12 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # 8. prizes
         if prizes_param is not None:
             if prizes_param.lower() == 'true':
                 quizzes_qs = quizzes_qs.exclude(prizes__exact='')
             elif prizes_param.lower() == 'false':
                 quizzes_qs = quizzes_qs.filter(prizes__exact='')
 
-        # 9. show_full (exclude filled quizzes)
         if show_full_param == 'false':
             not_filled_ids = []
             for quiz in quizzes_qs:
@@ -428,7 +370,6 @@ class SearchView(APIView):
                     not_filled_ids.append(quiz.id)
             quizzes_qs = quizzes_qs.filter(id__in=not_filled_ids)
 
-        # 10. Distance filter
         if lat_param and lng_param and distance_param:
             try:
                 user_lat = float(lat_param)
@@ -447,7 +388,6 @@ class SearchView(APIView):
             except ValueError:
                 pass
 
-        # 11. Exclude finished quizzes if show_past=false
         if show_past_param == 'false':
             non_finished_ids = []
             for quiz in quizzes_qs:
@@ -456,7 +396,7 @@ class SearchView(APIView):
                     non_finished_ids.append(quiz.id)
             quizzes_qs = quizzes_qs.filter(id__in=non_finished_ids)
 
-        # 12. Multi-word search on title + organizer
+
         if q:
             words = q.split()
             for word in words:
@@ -464,7 +404,6 @@ class SearchView(APIView):
                     Q(title__icontains=word) | Q(organizer__username__icontains=word)
                 )
 
-        # Build final quizzes array
         quizzes_data = []
         for quiz in quizzes_qs:
             quizzes_data.append({
@@ -484,7 +423,6 @@ class SearchView(APIView):
                 "location_id": quiz.location.id
             })
 
-        # location quizzes
         location_quizzes_qs = quizzes_qs
         if q:
             words = q.split()
@@ -510,7 +448,6 @@ class SearchView(APIView):
                 "location_id": quiz.location.id
             })
 
-        # quizmakers
         if q:
             quizmakers_qs = User.objects.filter(role=User.QUIZMAKER)
             words = q.split()
@@ -550,9 +487,7 @@ class SearchView(APIView):
         return distance
 
 class LocationViewSet(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing location instances.
-    """
+
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
 
@@ -565,18 +500,13 @@ class LocationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='by-place-id')
     def by_place_id(self, request):
-        """
-        Custom endpoint to return a location's primary key (id)
-        given a place_id via query parameter: ?place_id=XYZ
-        """
+
         place_id = request.query_params.get('place_id', '').strip()
         if not place_id:
             raise ValidationError("A 'place_id' query parameter is required.")
         
-        # Attempt to find the location by place_id
         location = get_object_or_404(Location, place_id=place_id)
 
-        # Return the DB 'id' along with any other info you want
         data = {
             "id": location.id,
             "name": location.name,
