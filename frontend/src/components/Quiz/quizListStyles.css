@@ -65,7 +65,7 @@
     background-color: #f9f9f9;
     min-width: 500px;
     border: 1px solid #ccc;
-    border-radius: 10px;
+    border-radius: 20px;
     z-index: 1;
     padding: 10px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
@@ -94,6 +94,7 @@
     margin: 10px 0; /* Adds space above and below the divider */
 }
 
+
 .filterSection label {
     align-items: center;
     font-size: 0.9vw; /* Adjust font size */
@@ -118,6 +119,8 @@
 
 
 
+
+
 #profileButton{
     background-color: white;
     width: 8vw;
@@ -126,6 +129,7 @@
     cursor: pointer;
     position: absolute;
     right: 5vw;
+    color: black;
 }
 
 p{
@@ -153,9 +157,34 @@ p{
     top: 7vw;
     border-radius: 30px;
     background-color: #531b70;
-    width: 20%;
+    width: 18%;
+    height: 85%; /* Ensure it takes up the full viewport height */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    overflow-x: hidden;
     margin: 40px 15px;
 
+}
+
+.navigacija::-webkit-scrollbar {
+    width: 10px; /* Width of the scrollbar */
+}
+
+/* Style the scrollbar track background */
+.navigacija::-webkit-scrollbar-track {
+    background: #ab4cdb; /* Background color of the track */
+    border-radius: 5px;
+}
+
+/* Style the scrollbar thumb (the draggable part) */
+.navigacija::-webkit-scrollbar-thumb {
+    background-color: white; /* Thumb color */
+    border-radius: 4px; /* Round the corners of the thumb */
+    border: 0.5px solid #444; /* Add a border for contrast */
+}
+
+/* Style the scrollbar thumb on hover */
+.navigacija::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Darker color on hover */
 }
 
 .buttons{
@@ -175,8 +204,8 @@ p{
 
 #navButtons{
     margin-top: 5%;
-    width: 75%;
-    height: 3vw;
+    width: 80%;
+    height: 2.8vw;
     font-size: 1.5vw;
 }
 
@@ -184,8 +213,8 @@ p{
     background-color: white; /* Highlight color */
     color: #531b70;
     font-weight: bolder;
-    width: 78%;
-    height: 3.2vw;
+    width: 81%;
+    height: 3vw;
     box-shadow: 0 0 8px #ae4bdf, 0 0 18px #ae4bdf, 0 0 28px #ae4bdf;
 }
 
@@ -255,6 +284,7 @@ p{
     margin: 2%;
     border-radius: 40px;
     height: 30%;
+    padding: 2%;
 }
 
 

@@ -65,16 +65,30 @@ const QuizList = () => {
 
     const handleShowQuizMaker = async (organizerId) => {
         try {
-            const isUsername = isNaN(organizerId); // If not a number, it's likely a username
+            // Fetch quizmaker's general info
+            const userResponse = await api.get(`/api/users/${organizerId}/`);
+            const quizMakerInfo = userResponse.data;
 
-            // Make the API call
-            const response = await api.get(`/api/users/${organizerId}/`);            
-            setQuizMakerInfo(response.data); // Store quizmaker details
-            setShowQuizMakerPopup(true); // Show the popup
+            console.log("Response data: ", userResponse.data);
+    
+            // Fetch quizmaker's average score
+            const scoreResponse = await api.get(`/api/users/${organizerId}/average-score/`);
+            const averageScore = scoreResponse.data.average_score;
+            console.log("Average score response: ", scoreResponse.data);
+
+    
+            // Combine both pieces of information
+            setQuizMakerInfo({
+                ...quizMakerInfo,
+                averageRating: averageScore,
+            });
+    
+            setShowQuizMakerPopup(true);
         } catch (err) {
-            setError('Failed to fetch quizmaker info.');
+            setError('Failed to fetch quizmaker info or average rating.');
         }
     };
+    
 
     // Close the popup
     const handleClosePopup = () => {
@@ -125,7 +139,7 @@ const fetchQuizzes = async () => {
         //console.log(url);
         //console.log(JSON.stringify(response.data))
 
-        setAllQuizzes(response.data.quizzes); // Set all quizzes to state
+        setQuizzes(response.data.quizzes); // Set all quizzes to state
 
         // Filter quizzes based on the registration deadline
         const now = new Date();
@@ -145,7 +159,11 @@ const fetchQuizzes = async () => {
 const fetchInitQuizzes = async ()=>{
     const response = await api.get('api/quizzes/');
     setAllQuizzes(response.data);
-    //console.log(JSON.stringify(response.data));
+   // console.log(response.data);
+    const now = new Date();
+    setQuizzes(response.data.filter((quiz) => new Date(quiz.registration_deadline) >= now));
+    console.log((response.data));
+    console.log("Filtirani kvizovi: " + quizzes);
 }
 
 useEffect(() => {
@@ -163,7 +181,7 @@ useEffect( () => {
     fetchInitQuizzes()
     
     //fetchQuizzes(); // Call the `fetchQuizzes` function
-}, []); // Re-run whenever `filters` change
+}, []); 
 
     
 
@@ -395,7 +413,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this quiz?')) return; // Confirm action
     
         try {
-            await api.delete(`/quizzes/${quizId}/`, {
+            await api.delete(`/api/quizzes/${quizId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -414,7 +432,7 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this user?')) return; // Confirm action
     
         try {
-            await api.delete(`/users/${userId}/`, {
+            await api.delete(`/api/users/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -434,13 +452,33 @@ useEffect( () => {
         if (!window.confirm('Are you sure you want to delete this team?')) return; // Confirm action
     
         try {
-            await api.delete(`/teams/${teamId}/`, {
+            await api.delete(`/api/teams/${teamId}/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
             setTeams((prevTeams) => prevTeams.filter((team) => team.id !== teamId));
+
+
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while deleting the quiz.');
+            console.log(err);
+
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this review?')) return; // Confirm action
+    
+        try {
+            await api.delete(`/api/reviews/${reviewId}/`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            // Ažuriraj stanje kako bi se uklonio iz liste bez ponovnog učitavanja
+            setReviews((prevReviews) => prevReviews.filter((review) => review.id !== reviewId));
 
 
         } catch (err) {
@@ -475,7 +513,7 @@ useEffect( () => {
         </div>
                 
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
-                    <img className='userImg' src={user_icon} alt='user_icon' />
+                {userRole === null ? "Register" : <img className='userImg' src={user_icon} alt='user_icon' />}
                 </button>
             </div>
 
@@ -549,6 +587,7 @@ useEffect( () => {
                             <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
                             <p>Duration: {quiz.duration} mins</p>                         
                         </div>
+                        {userRole !== 'admin' & userRole !==  null?
                         <div className='prijava'>
                         <button 
                             id='prijaviSe' 
@@ -574,7 +613,7 @@ useEffect( () => {
                         </button>
 
 
-                        </div>
+                        </div>:null}
                     </div>
                 ))}
 
@@ -592,8 +631,8 @@ useEffect( () => {
                         <p><strong>Email:</strong> {quizMakerInfo.email}</p>
                         <p>
                             <strong>Average Rating:</strong>{' '}
-                            {quizMakerInfo.average_rating
-                                ? `${quizMakerInfo.average_rating.toFixed(1)} / 5`
+                            {quizMakerInfo.averageRating
+                                ? `${quizMakerInfo.averageRating.toFixed(1)} / 5`
                                 : 'No reviews yet'}
                         </p>
                         <button onClick={handleClosePopup}>
@@ -605,7 +644,7 @@ useEffect( () => {
             </div>
         }
 
-        {!showQuizPopup && showAllQuizzes && allQuizzes.length && 
+        {!showQuizPopup & showAllQuizzes & allQuizzes.length > 0?
         
             <div className='quizzes'>
                 {allQuizzes.map((quiz) => (
@@ -644,10 +683,10 @@ useEffect( () => {
                     
                 </div>
                 ))}
-            </div>
+            </div> : null
         }
 
-        {!showQuizPopup & viewUsers && 
+        {!showQuizPopup & viewUsers ?
             <div className='quizzes'>
             {users.map((user) => (
                 <div className='kviz' key={user.id}>
@@ -666,12 +705,12 @@ useEffect( () => {
                     </button>
                 </div>
                 
-            </div>
+            </div> 
             ))}
 
-        </div>}
+        </div>: null}
 
-        {!showQuizPopup & viewTeams && 
+        {!showQuizPopup & viewTeams ?
             <div className='quizzes'>
             {teams.map((team) => (
                 <div className='kviz' key={team.id}>
@@ -691,7 +730,33 @@ useEffect( () => {
             </div>
             ))}
 
-        </div>}
+        </div>:null}
+
+
+        {!showQuizPopup & viewReviews ? 
+            <div className='quizzes'>
+            {reviews.map((review) => (
+                <div className='kviz' key={review.id}>
+                    <div className='nazivKviza'>Quiz: {review.quiz}</div>
+                    <div className='opisKviza'>
+                        <p className='opis'>Rating: {review.rating} </p>
+                        <p className='opis'> {review.comments} </p>	
+                    </div>
+                <div className='informacije'>
+                    <p >User: {review.user} </p>
+                    <p >Created at: {review.created_at} </p>
+                    
+                </div>
+                <div className='prijava'>
+                    <button id='prijaviSe' onClick={() => handleDeleteReview(review.id)}>
+                        Delete
+                    </button>
+                </div>
+                
+            </div>
+            ))}
+
+        </div>:null}
 
             {showQuizPopup && (
                 <div className="popupOverlay">

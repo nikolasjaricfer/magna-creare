@@ -2,7 +2,8 @@
     display: flex;
     flex-direction: column;
     margin: auto;
-    margin-top: 100px;
+    margin-top: 50px;
+    margin-bottom: 50px;
     width: 600px;
     background-color: #281549;
     border-radius: 50px;
@@ -17,6 +18,7 @@ h2{
     margin-top: 50px;
     font-size: 2rem;
 }
+
 
 form{
     margin-top: 55px;
@@ -107,10 +109,14 @@ select{
 }
 
 #googleButton{
-    margin-top: 5%;
+    margin-top: 3%;
 }
 
-
+.zavrsi{
+    text-align: center;
+    margin-top: 100px;
+    font-size: 3vw;
+}
 
 
 
