@@ -214,7 +214,7 @@ useEffect( () => {
     };
 
     function buildSearchUrl(filters) {
-        let url = "?"; // Assuming your API endpoint is "/api/search/"
+        let url = "?"; 
         let params = [];
     
         if (filters.difficulty && filters.difficulty.length) {
@@ -286,29 +286,6 @@ useEffect( () => {
             fetchReviews(); // dohvacanje svih reviewa
         }, []);
     }
-
-   
-    /*
-
-    const fetchQuizzes2 = async () => {
-        try {
-            const params = new URLSearchParams(filters2).toString(); // Convert filters2 to query params
-            const url = buildSearchUrl(filters2);
-            console.log(url);
-            console.log(params);
-            
-            //const response = await api.get(`api/search?${url}`); // Send GET request with query params
-            const response = await api.get(`api/search?${url}`); // Send GET request with query params
-
-            setAllQuizzes(response.data.quizzes); // Update the state with the response data
-
-        } catch (error) {
-            console.error("Failed to fetch quizzes:", error); // Log errors for debugging
-        }
-    };
-    */
-
-   
 
     
 
@@ -574,7 +551,7 @@ useEffect( () => {
                     </div>
                 </div>
             </div>
-                {allQuizzes.map((quiz) => (
+                {quizzes.map((quiz) => (
                     <div className='kviz' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>

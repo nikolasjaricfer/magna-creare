@@ -26,22 +26,6 @@ class User(AbstractUser):
     
 
 
-class Guest(models.Model):
-    username = models.CharField(max_length=150, unique=True, blank=True)  # Allow blank for auto-generation
-    email = models.EmailField(blank=True, null=True)
-    role = models.CharField(max_length=10, default='guest', editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_active = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.username:
-            self.username = f"guest_{get_random_string(8)}"  # Generate a random username
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.username
-
-
 
 class Role(models.Model):
     role_name = models.CharField(max_length=50)
