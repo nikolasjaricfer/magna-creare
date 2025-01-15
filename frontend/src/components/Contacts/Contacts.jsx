@@ -32,7 +32,7 @@ const Contacts = () =>{
 
             {/* ADD A PICTURE HERE */}
             <div className="teamPicture">
-                <img src="../../../public/magnacreare_pic.png" alt="Team" className="teamImage" />
+                <img src="/magnacreare_pic.png" alt="Team" className="teamImage" />
             </div>
 
             <button className='goToHomePage'id='changeButton' onClick={()=>navigate('/Quiz')}> Go to home page</button>

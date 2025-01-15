@@ -127,61 +127,60 @@ const QuizList = () => {
     }, []); // Run only once on component mount
     
 
-    
-// Function to fetch quizzes based on filters
-const fetchQuizzes = async () => {
-    try {
-        //const filters = getSelectedFilters(); // Get filters dynamically
-        const url = buildSearchUrl(filters); // Construct URL with filters
-        //console.log(url);
-        const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
-        
-        //console.log(url);
-        //console.log(JSON.stringify(response.data))
+    // Function to fetch quizzes based on filters
+    const fetchQuizzes = async () => {
+        try {
+            //const filters = getSelectedFilters(); // Get filters dynamically
+            const url = buildSearchUrl(filters); // Construct URL with filters
+            //console.log(url);
+            const response = await api.get(`api/search${url}`); // Fetch quizzes based on the URL
+            
+            //console.log(url);
+            //console.log(JSON.stringify(response.data))
 
-        setQuizzes(response.data.quizzes); // Set all quizzes to state
+            setQuizzes(response.data.quizzes); // Set all quizzes to state
 
-        // Filter quizzes based on the registration deadline
+            // Filter quizzes based on the registration deadline
+            const now = new Date();
+            const filteredQuizzes = response.data.filter(
+                (quiz) => new Date(quiz.registration_deadline) >= now
+            );
+            
+            setQuizzes(filteredQuizzes); // Set filtered quizzes to state
+            const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+            setAppliedQuizzes(appliedQuizzesFromStorage); // Update state with applied quizzes
+            //console.log(filteredQuizzes);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
+        }
+    };
+
+    const fetchInitQuizzes = async ()=>{
+        const response = await api.get('api/quizzes/');
+        setAllQuizzes(response.data);
+    // console.log(response.data);
         const now = new Date();
-        const filteredQuizzes = response.data.filter(
-            (quiz) => new Date(quiz.registration_deadline) >= now
-        );
+        setQuizzes(response.data.filter((quiz) => new Date(quiz.registration_deadline) >= now));
+        console.log((response.data));
+        console.log("Filtirani kvizovi: " + quizzes);
+    }
+
+    useEffect(() => {
+        if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
+            || filters.is_league || filters.price.length || filters.q)) { 
+            fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
+        } else {
+            fetchInitQuizzes();
+        }
+    }, [filters]); // Run this effect when `filters` change
+
+
+    // useEffect to fetch quizzes when there are no filters
+    useEffect( () => {
+        fetchInitQuizzes()
         
-        setQuizzes(filteredQuizzes); // Set filtered quizzes to state
-        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
-        setAppliedQuizzes(appliedQuizzesFromStorage); // Update state with applied quizzes
-        //console.log(filteredQuizzes);
-    } catch (err) {
-        setError(err.response?.data?.detail || 'An error occurred while fetching quizzes.');
-    }
-};
-
-const fetchInitQuizzes = async ()=>{
-    const response = await api.get('api/quizzes/');
-    setAllQuizzes(response.data);
-   // console.log(response.data);
-    const now = new Date();
-    setQuizzes(response.data.filter((quiz) => new Date(quiz.registration_deadline) >= now));
-    console.log((response.data));
-    console.log("Filtirani kvizovi: " + quizzes);
-}
-
-useEffect(() => {
-    if (filters && (filters.category.length || filters.difficulty.length || filters.distance 
-        || filters.is_league || filters.price.length || filters.q)) { 
-        fetchQuizzes(); // Call `fetchQuizzes` only when filters have values
-    } else {
-        fetchInitQuizzes();
-    }
-}, [filters]); // Run this effect when `filters` change
-
-
-// useEffect to fetch quizzes when there are no filters
-useEffect( () => {
-    fetchInitQuizzes()
-    
-    //fetchQuizzes(); // Call the `fetchQuizzes` function
-}, []); 
+        //fetchQuizzes(); // Call the `fetchQuizzes` function
+    }, []); 
 
     
 
@@ -287,8 +286,6 @@ useEffect( () => {
         }, []);
     }
 
-    
-
     // Function to handle search input
     const handleSearch = (query) => {
     // Update the `q` field in the `filters` state
@@ -298,27 +295,54 @@ useEffect( () => {
     }));
 };
 
-    const handleQuizSubmission = async (e) => {
+    async function handleQuizSubmission(e) {
         e.preventDefault();
+
+        if (!Object.hasOwn(placeDetails, "placeId"))
+            return;
+
         token = localStorage.getItem('token');
+        let locationBr = -1;
 
         try {
-            const response = await api.post('api/locations/', {
-                name: placeDetails.name,
-                address: placeDetails.formattedAddress,
-                latitude: placeDetails.coordinates.lat,
-                longitude: placeDetails.coordinates.lng,
-                place_id: placeDetails.placeId 
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
+            const response = await api.get(`api/locations/by-place-id/?place_id=${placeDetails.placeId}`, {
+                    name: placeDetails.name,
+                    address: placeDetails.formattedAddress,
+                    latitude: placeDetails.coordinates.lat,
+                    longitude: placeDetails.coordinates.lng,
+                    place_id: placeDetails.placeId 
                 },
-            }
-        );
-        console.log(response);
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+            if (response.data !== "Location does not exist") 
+                locationBr = response.data.id;
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
+        }
+
+        if (locationBr == -1) {
+            try {
+                const response = await api.post('api/locations/', {
+                        name: placeDetails.name,
+                        address: placeDetails.address,
+                        latitude: placeDetails.coordinates.lat,
+                        longitude: placeDetails.coordinates.lng,
+                        place_id: placeDetails.placeId 
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    }
+                );
+                locationBr = response.data.id;
+            } catch (err) {
+                setError(err.response?.data?.detail || 'An error occurred');
+            }
         }
 
         try {
@@ -327,7 +351,7 @@ useEffect( () => {
                 description: description,
                 category: category,
                 difficulty: difficulty,
-                location: 1, //TODO dadati lokaciju
+                location: locationBr,
                 max_teams: maxTeams,
                 registration_deadline: registration_deadline,
                 fee: fee,
@@ -354,6 +378,7 @@ useEffect( () => {
 
         setShowQuizPopup(false); // Close the popup after submission
     };
+
 
     const handleTeamSubmission = async (e) => {
         e.preventDefault();

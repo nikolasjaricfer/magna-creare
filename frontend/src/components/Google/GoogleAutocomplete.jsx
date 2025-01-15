@@ -1,71 +1,66 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useEffect, useState } from 'react';
+import { LoadScript } from '@react-google-maps/api';
 
-const GoogleAutocomplete = ({ onLocationSelect }) => {
-  const inputRef = useRef(null);
-  const [placeDetails, setPlaceDetails] = useState({
-    placeId: "",
-    coordinates: null,
-    formattedAddress: "",
-  });
+const GOOGLE_MAPS_LIBRARIES = ['places'];
+
+function AutocompleteInput({funct}) {
+  const autocompleteRef = useRef(null); 
+  const [inputValue, setInputValue] = useState(''); 
 
   useEffect(() => {
-    const initializeAutocomplete = () => {
-      if (!window.google) return;
-
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-        fields: ["place_id", "geometry", "formatted_address", "name"],
+    if (window.google && autocompleteRef.current) {
+      const autocomplete = new window.google.maps.places.Autocomplete(autocompleteRef.current, {
+        fields: ['geometry', 'name', 'place_id', 'formatted_address'],
       });
 
-      autocomplete.addListener("place_changed", () => {
+      // Listener for when a place is selected
+      autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
 
-        if (place.geometry) {
-          const selectedPlace = {
+        if (place) {
+          funct({
+            name: place.name || 'N/A',
+            address: place.formatted_address || 'N/A',
             placeId: place.place_id,
             coordinates: {
               lat: place.geometry.location.lat(),
               lng: place.geometry.location.lng(),
             },
-            formattedAddress: place.formatted_address,
-            name: place.name
-          };
+          });
 
-          setPlaceDetails(selectedPlace);
-
-          // Return the selected location details
-          if (onLocationSelect) {
-            onLocationSelect(selectedPlace);
-          }
+          setInputValue(place.formatted_address || '');
         }
       });
-    };
-
-    // Load Google Maps API script if not already loaded
-    if (!window.google) {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws&libraries=places`;
-      script.async = true;
-      script.onload = initializeAutocomplete;
-      document.body.appendChild(script);
-    } else {
-      initializeAutocomplete();
     }
-  }, [onLocationSelect]);
+  }, []);
 
   return (
     <input
-        ref={inputRef}
-        type="text"
-        placeholder="Enter a location"
-        style={{
-          width: "100%",
-          padding: "10px",
-          fontSize: "16px",
-          border: "1px solid #ccc",
-          borderRadius: "4px",
-        }}
-      />
+      ref={autocompleteRef}
+      type="text"
+      value={inputValue}
+      placeholder="Enter a location"
+      onChange={(e) => setInputValue(e.target.value)}
+      style={{
+        width: '100%',
+        padding: '10px',
+        fontSize: '16px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+      }}
+    />
   );
-};
+}
+
+function GoogleAutocomplete({onLocationSelect}) {
+  return (
+    <LoadScript
+      googleMapsApiKey="AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"
+      libraries={GOOGLE_MAPS_LIBRARIES}
+    >
+      <AutocompleteInput funct={onLocationSelect}/>
+    </LoadScript>
+  );
+}
 
 export default GoogleAutocomplete;

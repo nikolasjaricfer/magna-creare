@@ -9,7 +9,7 @@ import Profile from './components/Profile/Profile';
 import Contacts from './components/Contacts/Contacts';
 import RegComplete from './components/Auth/RegComplete';
 import LogComplete from './components/Auth/LogComplete';
-import Maps from './components/Google/GoogleMapsPage';
+import MapsPage from './components/Google/GoogleMapsPage';
 import MyArchive from './components/MyArchive/MyArchive';
 
 const App = () => {
@@ -25,7 +25,7 @@ const App = () => {
                     <Route path="/contacts" element={<Contacts />} />
                     <Route path="/regComplete" element={<RegComplete />} />
                     <Route path="/logComplete" element={<LogComplete />} />
-                    <Route path="/maps" element={<Maps />} />
+                    <Route path="/maps" element={<MapsPage />} />
                     <Route path="/my-archive" element={<MyArchive />} />
                 </Routes>
             </Router>

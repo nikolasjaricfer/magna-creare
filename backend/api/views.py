@@ -10,7 +10,6 @@ from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.microsoft.views import MicrosoftGraphOAuth2Adapter
 from .serializers import CustomMicrosoftLoginSerializer
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 
 from django.utils import timezone
@@ -550,6 +549,7 @@ class LocationViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsAuthenticated]
         return super(LocationViewSet, self).get_permissions()
     
+
     @action(detail=False, methods=['get'], url_path='by-place-id')
     def by_place_id(self, request):
         """
@@ -560,16 +560,21 @@ class LocationViewSet(viewsets.ModelViewSet):
         if not place_id:
             raise ValidationError("A 'place_id' query parameter is required.")
         
-        # Attempt to find the location by place_id
-        location = get_object_or_404(Location, place_id=place_id)
 
-        # Return the DB 'id' along with any other info you want
-        data = {
-            "id": location.id,
-            "name": location.name,
-            "address": location.address,
-            "place_id": location.place_id
-        }
+        # Attempt to find the location by place_id
+        data = "Error"
+
+        try:
+            location = Location.objects.get(place_id=place_id)
+            data = {
+                "id": location.id,
+                "name": location.name,
+                "address": location.address,
+                "place_id": location.place_id
+            }
+        except Location.DoesNotExist:
+            data = "Location does not exist"
+
         return Response(data, status=200)
     
 
