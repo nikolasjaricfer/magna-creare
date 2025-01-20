@@ -888,11 +888,11 @@ const QuizList = () => {
                     <button id='navButtons' className={pageLocation.pathname === '/quiz' ? 'active' : ''} onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
                     <button id='navButtons' className={pageLocation.pathname === '/my-archive' ? 'active' : ''} onClick={() => handleNavigation('/my-archive')}> My archive</button>
                     <button id='navButtons' className={pageLocation.pathname === '/maps' ? 'active' : ''} onClick={() => navigate('/maps')}>Maps</button>
-                    {userRole === 'quizmaker' | userRole === 'admin' && (
+                    {userRole === 'quizmaker' || userRole === 'admin' ? (
                         <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
                         </button>
-                    )}
+                    ) : null}
 
 
                     {userRole === 'admin' && (<p id='adminText'> Admin functions </p>)	}
