@@ -667,17 +667,7 @@ const QuizList = () => {
                                                         
                     </div>
 
-                    <div className="reviews">
-                        <h4>Reviews for {quiz.organizer}:</h4>
-                        {reviews
-                            .filter((review) => review.quiz === quiz.id) // Filter reviews for the current quiz
-                            .map((review) => (
-                                <div key={review.id} className="review">
-                                    <p><strong>Rating:</strong> {review.rating}/5</p>
-                                    <p><strong>Comment:</strong> {review.comments}</p>
-                                </div>
-                            ))}
-                    </div>
+                    
                     <div className='prijava'>
                         <button id='prijaviSe' onClick={() => handleDeleteQuiz(quiz.id)}>
                             Delete
@@ -855,8 +845,8 @@ const QuizList = () => {
 
             {/* Team application popup */}
             {showTeamPopup && (
-                <div className="popupOverlay">
-                    <div className="popupContent">
+                <div className="popupOverlayInfo">
+                    <div className="popupContentInfo">
                         <h3 id='applyTeamText'>Apply to Join the Quiz</h3>
                         <form onSubmit={handleTeamSubmission}>
                             <input

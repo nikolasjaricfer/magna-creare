@@ -114,6 +114,13 @@
     cursor: pointer;
 }
 
+#teamName{
+    width: 60%;
+}
+
+#membersCount{
+    width: 60%;
+}
 
 
 
@@ -293,6 +300,7 @@ p{
     height: 100%;
     width: 65%;
     margin-left: 25%;
+    margin-top: 5%;
 
     display: flex;
     justify-content: center;
