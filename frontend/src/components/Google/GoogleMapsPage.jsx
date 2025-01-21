@@ -8,6 +8,7 @@ import {
   AdvancedMarker,
   Pin
 } from '@vis.gl/react-google-maps';
+import './mapsStyles.css';
 
 
 const PoiMarkers = (props) => {
@@ -31,6 +32,8 @@ const MapsPage = () => {
   const [locations, setLocations] = useState([]);
   const position = {lat: 45.8, lng: 16.0};
 
+  const [quizzes, setQuizzes] = useState([]);
+
 
   useEffect(() => {
     const loadPins = async () => {
@@ -51,17 +54,28 @@ const MapsPage = () => {
   }, []);
 
   return (
-    <APIProvider apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}>
-      <Map
-      mapId='DEMO_MAP_ID'
-      style={{width: '100vw', height: '100vh'}}
-      defaultCenter={position}
-      defaultZoom={15}
-      gestureHandling={'greedy'}
-      disableDefaultUI={true}
-      />
-      <PoiMarkers pois={locations} />
-    </APIProvider>
+    <> 
+      <div className='filterDiv'>
+        
+
+
+      </div>
+      <div className='maps'>
+        <APIProvider apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}>
+          <Map
+          mapId='DEMO_MAP_ID'
+          style={{width: '100vw', height: '100vh'}}
+          defaultCenter={position}
+          defaultZoom={15}
+          gestureHandling={'greedy'}
+          disableDefaultUI={true}
+          />
+          <PoiMarkers pois={locations} />
+        </APIProvider>
+      </div>
+    </>
+      
+    
   );
 }
 

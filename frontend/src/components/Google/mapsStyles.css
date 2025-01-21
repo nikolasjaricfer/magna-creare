@@ -1,0 +1,17 @@
+.filterDiv{
+    position: fixed;
+    top: 7vw;
+    border-radius: 30px;
+    background-color: #531b70;
+    left: 5vw;
+    width: 20vw;
+    height: 80vh;
+    z-index: 1;
+
+}
+
+.maps{
+    position: absolute;
+    top: 0vw;
+
+    }
