@@ -89,13 +89,15 @@ const MapsPage = () => {
     const url = '?q=' + pin.name;
     const response = await api.get(`api/locations`);
     for(var i = 0; i < response.data.length; i++){
-      if(response.data[i].name == locationName){
+      if(response.data[i].name == locationName ){
         id = response.data[i].id;
       }
     }
     const response2 = await api.get(`api/quizzes`);
+    console.log(response2.data);
+    const now = new Date();
     for(var i = 0; i < response2.data.length; i++){
-      if(response2.data[i].location == id){
+      if(response2.data[i].location == id && new Date(response2.data[i].registration_deadline) >= now){
         kvizovi.push(response2.data[i]);
       }
     }
