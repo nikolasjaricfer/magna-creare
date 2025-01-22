@@ -10,6 +10,9 @@ import {
 } from '@vis.gl/react-google-maps';
 import './mapsStyles.css';
 
+const pinClick = (pin) => {
+  console.log(pin);
+}
 
 const PoiMarkers = (props) => {
   return (
@@ -17,7 +20,9 @@ const PoiMarkers = (props) => {
       {props.pois.map(poi => (
         <AdvancedMarker
           key={poi.name}
-          position={{ lat: poi.latitude, lng: poi.longitude }}>
+          position={{ lat: poi.latitude, lng: poi.longitude }}
+          onClick={(e) => pinClick(poi)}
+          >
         <Pin background={'#a44ad5'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
       ))}
@@ -45,14 +50,12 @@ const MapsPage = () => {
         }
       );
       setLocations(response.data);
-      console.log(response.data);
     }
 
     loadPins();
   }, []);
 
   return (
-
     <div className='maps'>
       <GoogleAutocomplete onLocationSelect={console.log}/>
       <Map
