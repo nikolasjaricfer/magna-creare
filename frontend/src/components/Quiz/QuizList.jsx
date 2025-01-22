@@ -325,7 +325,6 @@ const QuizList = () => {
             setError(err.response?.data?.detail || 'An error occurred');
         }
 
-        return;
 
         if (locationBr == -1) {
             try {
