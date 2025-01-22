@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import GoogleAutocomplete from './GoogleAutocomplete';
 import {
-  APIProvider,
   Map,
   AdvancedMarker,
   Pin
@@ -17,15 +17,13 @@ const PoiMarkers = (props) => {
       {props.pois.map(poi => (
         <AdvancedMarker
           key={poi.name}
-          position={{ lat: poi.latitude, lng: poi.longitude  }}>
-        <Pin background={'#FBBC04'} glyphColor={'#000'} borderColor={'#000'} />
+          position={{ lat: poi.latitude, lng: poi.longitude }}>
+        <Pin background={'#a44ad5'} glyphColor={'#000'} borderColor={'#000'} />
         </AdvancedMarker>
       ))}
     </>
   );
 };
-
-
 
 const MapsPage = () => {
   const [token, setToken] = useState('');
@@ -54,28 +52,19 @@ const MapsPage = () => {
   }, []);
 
   return (
-    <> 
-      <div className='filterDiv'>
-        
 
-
-      </div>
-      <div className='maps'>
-        <APIProvider apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}>
-          <Map
-          mapId='DEMO_MAP_ID'
-          style={{width: '100vw', height: '100vh'}}
-          defaultCenter={position}
-          defaultZoom={15}
-          gestureHandling={'greedy'}
-          disableDefaultUI={true}
-          />
-          <PoiMarkers pois={locations} />
-        </APIProvider>
-      </div>
-    </>
-      
-    
+    <div className='maps'>
+      <GoogleAutocomplete onLocationSelect={console.log}/>
+      <Map
+      mapId='Quiz_Maker_Map'
+      style={{width: '100vw', height: '100vh'}}
+      defaultCenter={position}
+      defaultZoom={15}
+      gestureHandling={'greedy'}
+      disableDefaultUI={true}
+      />
+      <PoiMarkers pois={locations} />
+    </div>
   );
 }
 

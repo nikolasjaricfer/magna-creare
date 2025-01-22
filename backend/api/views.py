@@ -556,6 +556,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         Custom endpoint to return a location's primary key (id)
         given a place_id via query parameter: ?place_id=XYZ
         """
+
         place_id = request.query_params.get('place_id', '').strip()
         if not place_id:
             raise ValidationError("A 'place_id' query parameter is required.")

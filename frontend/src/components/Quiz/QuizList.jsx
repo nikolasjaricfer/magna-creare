@@ -307,7 +307,7 @@ const QuizList = () => {
         try {
             const response = await api.get(`api/locations/by-place-id/?place_id=${placeDetails.placeId}`, {
                     name: placeDetails.name,
-                    address: placeDetails.formattedAddress,
+                    address: placeDetails.address,
                     latitude: placeDetails.coordinates.lat,
                     longitude: placeDetails.coordinates.lng,
                     place_id: placeDetails.placeId 
@@ -318,11 +318,14 @@ const QuizList = () => {
                     },
                 }
             );
+            console.log(response);
             if (response.data !== "Location does not exist") 
                 locationBr = response.data.id;
         } catch (err) {
             setError(err.response?.data?.detail || 'An error occurred');
         }
+
+        return;
 
         if (locationBr == -1) {
             try {
