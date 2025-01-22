@@ -30,6 +30,8 @@ const QuizList = () => {
     const [activeQuizzes, setActiveQuizzes] = useState([]);
     const [archivedQuizzes, setArchivedQuizzes] = useState([]);
     const [showAllQuizzes, setShowAllQuizzes] = useState(false);
+    const [locations, setLocations] = useState([]);
+    const [locDict, setLocDict] = useState({});
 
     const [placeDetails, setPlaceDetails] = useState({
         placeId: "",        
@@ -161,8 +163,18 @@ const QuizList = () => {
     // console.log(response.data);
         const now = new Date();
         setQuizzes(response.data.filter((quiz) => new Date(quiz.registration_deadline) >= now));
-        console.log((response.data));
-        console.log("Filtirani kvizovi: " + quizzes);
+        //console.log((response.data));
+        //console.log("Filtirani kvizovi: " + quizzes);
+
+        const response2 = await api.get('api/locations/');
+        setLocations(response2.data);
+        console.log(response2.data);
+
+        for(var i = 0; i < response2.data.length; i++){
+            locDict[response2.data[i].id] = response2.data[i].name;
+        }
+        console.log(locDict);
+        
     }
 
     useEffect(() => {
@@ -177,7 +189,7 @@ const QuizList = () => {
 
     // useEffect to fetch quizzes when there are no filters
     useEffect( () => {
-        fetchInitQuizzes()
+        fetchInitQuizzes();
         
         //fetchQuizzes(); // Call the `fetchQuizzes` function
     }, []); 
@@ -584,6 +596,7 @@ const QuizList = () => {
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
                             <p className='opis'>{quiz.description}</p>
+                            <p className='opis'>Location: {locDict[quiz.location]}</p>
                         </div>
                         <div className='informacije'>
                             <p>Category: {quiz.category}</p>
@@ -657,6 +670,7 @@ const QuizList = () => {
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
                             <p className='opis'>{quiz.description}</p>
+                            <p className='opis'>Location: {locDict[quiz.location]}</p>
                         </div>
                     <div className='informacije'>
                         <p>Category: {quiz.category}</p>
