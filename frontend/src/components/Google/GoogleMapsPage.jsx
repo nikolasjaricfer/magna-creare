@@ -26,6 +26,8 @@ const MapsPage = () => {
 
   const [error, setError] = useState(null);
   
+  const [appliedQuizzes, setAppliedQuizzes] = useState([]);
+
   const handleTeamSubmission = async (e) => {
     e.preventDefault();
 
@@ -277,8 +279,9 @@ const handleClosePopup = () => {
                                     setQuizIdToJoin(quiz.id); // Set the quiz ID for the team submission
                                 }
                             }}
+                            disabled={appliedQuizzes.includes(quiz.id)} // Disable button if already applied
                         >
-                            {'Sign Up'}
+                            {appliedQuizzes.includes(quiz.id) ? 'Already Applied' : 'Sign Up'}
                         </button>
 
                         <button
