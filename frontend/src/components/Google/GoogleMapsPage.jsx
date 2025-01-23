@@ -11,8 +11,45 @@ import {
 import './mapsStyles.css';
 
 const MapsPage = () => {
-
   const navigate = useNavigate();
+
+  const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
+  const [quizMakerInfo, setQuizMakerInfo] = useState(null); // To store quizmaker info
+  const [showQuizMakerPopup, setShowQuizMakerPopup] = useState(false);
+
+
+
+  const handleShowQuizMaker = async (organizerId) => {
+    try {
+        // Fetch quizmaker's general info
+        const userResponse = await api.get(`/api/users/${organizerId}/`);
+        const quizMakerInfo = userResponse.data;
+
+        console.log("Response data: ", userResponse.data);
+
+        // Fetch quizmaker's average score
+        const scoreResponse = await api.get(`/api/users/${organizerId}/average-score/`);
+        const averageScore = scoreResponse.data.average_score;
+        console.log("Average score response: ", scoreResponse.data);
+
+
+        // Combine both pieces of information
+        setQuizMakerInfo({
+            ...quizMakerInfo,
+            averageRating: averageScore,
+        });
+
+        setShowQuizMakerPopup(true);
+    } catch (err) {
+        setError('Failed to fetch quizmaker info or average rating.');
+    }
+};
+
+const handleClosePopup = () => {
+  setShowQuizMakerPopup(false);
+  setQuizMakerInfo(null);
+};
+
 
   const PoiMarkers = (props) => {
     return (
@@ -108,6 +145,31 @@ const MapsPage = () => {
 
   return (
     <div className='maps'>
+
+            {showQuizMakerPopup && quizMakerInfo && (
+                <div
+                    className="popupOverlayInfo"
+                    onClick={handleClosePopup} // Close popup on clicking outside
+                >
+                    <div
+                        className="popupContentInfo"
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+                    >
+                        <h3>QuizMaker Info</h3>
+                        <p><strong>Name:</strong> {quizMakerInfo.username}</p>
+                        <p><strong>Email:</strong> {quizMakerInfo.email}</p>
+                        <p>
+                            <strong>Average Rating:</strong>{' '}
+                            {quizMakerInfo.averageRating
+                                ? `${quizMakerInfo.averageRating.toFixed(1)} / 5`
+                                : 'No reviews yet'}
+                        </p>
+                        <button onClick={handleClosePopup}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
       <div className='filterDiv'>
         <button className="home-button" id='changeButton' onClick={() => navigate('/Quiz')}>
           Go to home page
@@ -119,7 +181,7 @@ const MapsPage = () => {
                                                         localStorage.setItem('myLng', e.coordinates.lng)}}/>
         </div>
         <div className='kvizovi'>
-          <h3 className='distance'>My distance to selected location: {distance} km.</h3>
+          <h3 className='distance'>My distance to selected location: {distance} km</h3>
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
           <div className='kvizoviList'>
           {quizzes.map((quiz) => (
