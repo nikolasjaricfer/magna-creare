@@ -9,13 +9,9 @@ import {
   Pin
 } from '@vis.gl/react-google-maps';
 import './mapsStyles.css';
-import { useNavigate, Navigate } from 'react-router-dom';
-
 
 const MapsPage = () => {
 
-  const navigate = useNavigate();
-  
   const PoiMarkers = (props) => {
     return (
       <>
@@ -111,24 +107,23 @@ const MapsPage = () => {
   return (
     <div className='maps'>
       <div className='filterDiv'>
-      <button className='goToHomePage'id='changeButton' onClick={()=>navigate('/Quiz')}> Go to home page</button>
         <div className='lokacija'>
-          <h3 className='distance'>My location:</h3>
+          <h3>My location:</h3>
           <GoogleAutocomplete onLocationSelect={(e) => {console.log(e); 
                                                         localStorage.setItem('myLat', e.coordinates.lat);
                                                         localStorage.setItem('myLng', e.coordinates.lng)}}/>
         </div>
-        <div className='kvizoviMap'>
-          <h3 className='distance'>My distance to selected location: {distance}km</h3>
+        <div className='kvizovi'>
+          <h3 className='distance'>My distance to selected location: {distance}</h3>
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
-          <div className='kvizoviListMap'>
+          <div className='kvizoviList'>
           {quizzes.map((quiz) => (
-                    <div className='kvizMap' key={quiz.id}>
-                        <div className='nazivKvizaMap'>{quiz.title}</div>
-                        <div className='opisKvizaMap'>
+                    <div className='kviz' key={quiz.id}>
+                        <div className='nazivKviza'>{quiz.title}</div>
+                        <div className='opisKviza'>
                             <p className='opis'>{quiz.description}</p>
                         </div>
-                        <div className='informacijeMap'>
+                        <div className='informacije'>
                             <p>Category: {quiz.category}</p>
                             <p>Difficulty: {quiz.difficulty}</p>
                             <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>

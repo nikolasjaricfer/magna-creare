@@ -4,11 +4,10 @@
     border-radius: 30px;
     background-color: #531b70;
     left: 5vw;
-    width: 35vw;
+    width: 25vw;
     height: 80vh;
     z-index: 1;
-    padding-left: 2%;
-    color:white;
+    padding-left: 5%;
 
 }
 .lokacija{
@@ -21,76 +20,25 @@
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
 }
 
-.kvizMap{
-    background-color: #ca76f7;
-    position: relative;
-    margin: 2%;
-    border-radius: 30px;
-    
-    width: 80%;
-    color: black
-}
-
-.nazivKvizaMap{
-    position: relative;
-    top: 5%;
-    left: 5%;
-    font-size: 1.5vw;
-    font-weight: 700;
-}
-
-.opisKvizaMap{margin-top: 1vw;
-    position: relative;
-    left: 5%;
-    width: 60%;
-    font-size: 1.2vw;
-    font-weight: 500;
-}
-
-.informacijeMap{
-    position: relative;
-    display: flex;
-    margin-top: 0.8vw;
-    justify-content: space-around;
-    width: 90%;
-    left: 5%;
-    font-size: 1vw;
-
-}
-
-.distance{
-    font-size: 1.5vw;
-}
-
-.kvizoviText{
-    font-size: 1.5vw;
-}
-
-.pac-target-input{
-    width: 90%;
-    height: 2.5vw;
-    font-size: 1vw;
-}
-
-.kvizoviListMap::-webkit-scrollbar {
+.kvizovi::-webkit-scrollbar {
     width: 10px; /* Width of the scrollbar */
 }
 
 /* Style the scrollbar track background */
-.kvizoviListMap::-webkit-scrollbar-track {
+.kvizovi::-webkit-scrollbar-track {
     background: #ab4cdb; /* Background color of the track */
     border-radius: 5px;
 }
 
 /* Style the scrollbar thumb (the draggable part) */
-.kvizoviListMap::-webkit-scrollbar-thumb {
+.kvizovi::-webkit-scrollbar-thumb {
     background-color: white; /* Thumb color */
     border-radius: 4px; /* Round the corners of the thumb */
     border: 0.5px solid #444; /* Add a border for contrast */
 }
 
 /* Style the scrollbar thumb on hover */
-.kvizoviListMap::-webkit-scrollbar-thumb:hover {
+.kvizovi::-webkit-scrollbar-thumb:hover {
     background-color: #555; /* Darker color on hover */
 }
 .maps{
