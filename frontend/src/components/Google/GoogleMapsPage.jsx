@@ -1,6 +1,8 @@
 //"use client";
 import { Navigate, useNavigate } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
+
 import api from '../../services/api';
 import GoogleAutocomplete from './GoogleAutocomplete';
 import {
@@ -11,13 +13,49 @@ import {
 import './mapsStyles.css';
 
 const MapsPage = () => {
+  const { isAuthenticated, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
   const [quizMakerInfo, setQuizMakerInfo] = useState(null); // To store quizmaker info
   const [showQuizMakerPopup, setShowQuizMakerPopup] = useState(false);
 
+  const [teamName, setTeamName] = useState('');
+  const [membersCount, setMembersCount] = useState('');
+  const [quizIdToJoin, setQuizIdToJoin] = useState('');
 
+  const [error, setError] = useState(null);
+  
+  const handleTeamSubmission = async (e) => {
+    e.preventDefault();
+
+    if (!teamName || !membersCount || !quizIdToJoin) {
+        setError('Please fill in all fields correctly.');
+        return;
+    }
+
+    try {
+        await api.post('api/teams/', {
+            name: teamName,
+            quiz: quizIdToJoin,
+            members_count: membersCount,
+        });
+
+        
+        // Update applied quizzes in localStorage
+        const appliedQuizzesFromStorage = JSON.parse(localStorage.getItem('appliedQuizzes')) || [];
+        appliedQuizzesFromStorage.push(quizIdToJoin);
+        localStorage.setItem('appliedQuizzes', JSON.stringify(appliedQuizzesFromStorage));
+
+        setAppliedQuizzes(appliedQuizzesFromStorage); // Update state
+
+        alert("You have successfully applied to the quiz!");
+        setShowTeamPopup(false); // Close the team application popup on success
+    } catch (err) {
+        setError(err.response?.data?.detail || 'An error occurred');
+        console.log(err)
+    }
+};
 
   const handleShowQuizMaker = async (organizerId) => {
     try {
@@ -170,6 +208,35 @@ const handleClosePopup = () => {
                     </div>
                 </div>
             )}
+
+            {showTeamPopup && (
+                <div className="popupOverlayInfo">
+                    <div className="popupContentInfo">
+                        <h3 id='applyTeamText'>Apply to Join the Quiz</h3>
+                        <form onSubmit={handleTeamSubmission}>
+                            <input
+                                type="text"
+                                id="teamName"
+                                placeholder="Team Name"
+                                value={teamName}
+                                onChange={(e) => setTeamName(e.target.value)}
+                                required
+                            />
+                            <input
+                                type="number"
+                                id="membersCount"
+                                placeholder="Members Count"
+                                value={membersCount}
+                                onChange={(e) => setMembersCount(e.target.value)}
+                                required
+                            />
+                            <button type="submit" id="quizButtons">Apply</button>
+                            <button type="button" id="quizButtons" onClick={() => setShowTeamPopup(false)}>Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
       <div className='filterDiv'>
         <button className="home-button" id='changeButton' onClick={() => navigate('/Quiz')}>
           Go to home page
