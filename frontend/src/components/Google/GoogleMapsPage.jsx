@@ -145,7 +145,7 @@ const handleClosePopup = () => {
     lat2 = toRadians(lat2);
     long2 = toRadians(long2);
 
-    const d = 3963.0 * Math.acos(
+    const d = 6371.0 * Math.acos(
         Math.sin(lat1) * Math.sin(lat2) +
         Math.cos(lat1) * Math.cos(lat2) * Math.cos(long2 - long1)
     );
