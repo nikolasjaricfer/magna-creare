@@ -106,7 +106,6 @@ const Login = () => {
                             <ul>
                                 <li>Quick and easy quiz publishing of information.</li>
                                 <li>Ability to get feedback on quizzes via reviews.</li>
-                                <li>Tracking the number of registrations and participant interest.</li>
                             </ul>
                         </ul>
                         <br></br>

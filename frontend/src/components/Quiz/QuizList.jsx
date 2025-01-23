@@ -533,7 +533,7 @@ const QuizList = () => {
                 {userRole === null ? "Register" : <img className='userImg' src={user_icon} alt='user_icon' />}
                 </button>
                     
-                {userRole !== null && <p className="username">{localStorage.getItem('username')}</p>}
+                {userRole !== null && <p className="usernameHome">{localStorage.getItem('username')}</p>}
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -885,6 +885,7 @@ const QuizList = () => {
 
             {/* Navigation */}
             <div className='navigacija'>
+                
                 <div className='buttons'>
                     <button id='navButtons' className={pageLocation.pathname === '/quiz' ? 'active' : ''} onClick={()=> {setShowAllQuizzes(false); setShowQuizPopup(false); setShowTeamPopup(false);setViewTeams(false);setViewReviews(false); setViewUsers(false)}}> Home</button>
                     <button id='navButtons' className={pageLocation.pathname === '/my-archive' ? 'active' : ''} onClick={() => handleNavigation('/my-archive')}> My archive</button>
@@ -917,8 +918,6 @@ const QuizList = () => {
 
                     )}
                 </div>
-
-
                     <div className='contactButton'>
                     <button id='contacts' onClick={() => navigate('/contacts')}>
                         Developer contacts

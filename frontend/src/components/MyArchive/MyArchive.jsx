@@ -2,134 +2,147 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import user_icon from './user_icon.png';
 import api from '../../services/api';
-import { FaStar } from 'react-icons/fa';
+import GoogleAutocomplete from '../Google/GoogleAutocomplete'; // Ensure you have this imported
 import './MyArchiveStyles.css';
 
 const MyArchive = () => {
     const token = localStorage.getItem('token');
-    const userId = parseInt(localStorage.getItem('id'), 10);
     const userRole = localStorage.getItem('role');
     const navigate = useNavigate();
     const pageLocation = useLocation();
 
     const [archivedQuizzes, setArchivedQuizzes] = useState([]);
     const [error, setError] = useState(null);
-    const [ratings, setRatings] = useState({});
-    const [comments, setComments] = useState({});
-    const [submittedReviews, setSubmittedReviews] = useState({});
-    const [hover, setHover] = useState({}); // Hover state for tooltips
 
-    const ratingDescriptions = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    // Popup state
+    const [showQuizPopup, setShowQuizPopup] = useState(false); // State for quiz creation popup
+    const [showTeamPopup, setShowTeamPopup] = useState(false); // State for team application popup
+    const [quizTitle, setQuizTitle] = useState('');
+    const [maxTeams, setMaxTeams] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [registration_deadline, setRegistration_deadline] = useState('');
+    const [fee, setFee] = useState('');
+    const [description, setDescription] = useState('');
+    const [category, setCategory] = useState('');
+    const [difficulty, setDifficulty] = useState('');
+    const [duration, setDuration] = useState('');
+    const [organizer, setOrganizer] = useState('');
+    const [prizes, setPrizes] = useState('');
+    const [appliedQuizzes, setAppliedQuizzes] = useState([]);
+    const [activeQuizzes, setActiveQuizzes] = useState([]);
+    const [showAllQuizzes, setShowAllQuizzes] = useState(false);
+    const [locations, setLocations] = useState([]);
+    const [locDict, setLocDict] = useState({});
+    
+        const [placeDetails, setPlaceDetails] = useState({
+            placeId: "",        
+            coordinates: null,
+            formattedAddress: "",
+            name: ""
+        });
 
-    // Check if a quiz has ended
-    const isQuizEnded = (quiz) => {
-        const quizStartMs = new Date(quiz.start_time).getTime();
-        const quizDurationMs = quiz.duration * 60_000;
-        const quizEndTime = quizStartMs + quizDurationMs;
-        return Date.now() >= quizEndTime;
+   
+
+    async function handleQuizSubmission(e) {
+        e.preventDefault();
+
+        if (!Object.hasOwn(placeDetails, "placeId"))
+            return;
+
+        let locationBr = -1;
+
+        try {
+            const response = await api.get(`api/locations/by-place-id/?place_id=${placeDetails.placeId}`, {
+                    name: placeDetails.name,
+                    address: placeDetails.address,
+                    latitude: placeDetails.coordinates.lat,
+                    longitude: placeDetails.coordinates.lng,
+                    place_id: placeDetails.placeId 
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+            console.log(response);
+            if (response.data !== "Location does not exist") 
+                locationBr = response.data.id;
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred');
+        }
+
+
+        if (locationBr == -1) {
+            try {
+                const response = await api.post('api/locations/', {
+                        name: placeDetails.name,
+                        address: placeDetails.address,
+                        latitude: placeDetails.coordinates.lat,
+                        longitude: placeDetails.coordinates.lng,
+                        place_id: placeDetails.placeId 
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    }
+                );
+                locationBr = response.data.id;
+            } catch (err) {
+                setError(err.response?.data?.detail || 'An error occurred');
+            }
+        }
+
+        try {
+            const response = await api.post('api/quizzes/', {
+                title: quizTitle,
+                description: description,
+                category: category,
+                difficulty: difficulty,
+                location: locationBr,
+                max_teams: maxTeams,
+                registration_deadline: registration_deadline,
+                fee: fee,
+                duration: duration,
+                organizer: localStorage.getItem('id'),
+                is_league: false,
+                prizes: prizes,
+                start_time: startTime,
+                //created_at: startTime, //TODO stavi created_at na pravu vrijednost
+                max_team_members: 5 //TODO stavi max_team_members na pravu vrijednost
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+            setQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setAllQuizzes((prevQuizzes) => [...prevQuizzes, response.data]);
+            setShowAllQuizzes(false);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'An error occurred');
+        }
+
+        setShowQuizPopup(false); // Close the popup after submission
     };
 
-    // Fetch data on component mount
+    // Fetch archived quizzes on component mount
     useEffect(() => {
-        const fetchArchivedQuizzesAndReviews = async () => {
+        const fetchArchivedQuizzes = async () => {
             try {
-                const teamsResp = await api.get('api/teams/', {
+                const response = await api.get('api/quizzes/', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (teamsResp.status !== 200) {
-                    setError('Failed to fetch teams.');
-                    return;
-                }
-                const allTeams = teamsResp.data;
-                const myTeams = allTeams.filter((team) => team.registered_by === userId);
-                const quizIdsIJoined = myTeams.map((t) => t.quiz);
-
-                const quizzesResp = await api.get('api/quizzes/', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (quizzesResp.status !== 200) {
-                    setError('Failed to fetch quizzes.');
-                    return;
-                }
-                const allQuizzes = quizzesResp.data;
-                const endedAndJoined = allQuizzes.filter((q) => {
-                    const joined = quizIdsIJoined.includes(q.id);
-                    const ended = isQuizEnded(q);
-                    return joined && ended;
-                });
-                setArchivedQuizzes(endedAndJoined);
-
-                const reviewsResp = await api.get('api/reviews/', {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (reviewsResp.status === 200 && reviewsResp.data) {
-                    const allReviews = reviewsResp.data;
-                    const myReviews = allReviews.filter((r) => r.user === userId);
-
-                    const userReviewsMap = {};
-                    myReviews.forEach((r) => {
-                        userReviewsMap[r.quiz] = {
-                            rating: r.rating,
-                            comments: r.comments || '',
-                        };
-                    });
-                    setSubmittedReviews(userReviewsMap);
-                }
+                setArchivedQuizzes(response.data.filter((quiz) => quiz.is_archived));
             } catch (err) {
-                console.error('Error fetching archive quizzes or reviews:', err);
-                setError('Error fetching your archive quizzes.');
+                setError('Failed to fetch archived quizzes.');
             }
         };
 
-        fetchArchivedQuizzesAndReviews();
-    }, [token, userId]);
-
-    const handleRatingChange = (quizId, ratingValue) => {
-        setRatings((prev) => ({ ...prev, [quizId]: ratingValue }));
-    };
-
-    const handleCommentChange = (quizId, newComment) => {
-        setComments((prev) => ({ ...prev, [quizId]: newComment }));
-    };
-
-    const handleSubmitRating = async (quizId) => {
-        try {
-            const ratingValue = ratings[quizId] || '';
-            const commentValue = comments[quizId] || '';
-
-            if (!ratingValue) {
-                alert('Please select a rating.');
-                return;
-            }
-
-            await api.post(
-                'api/reviews/',
-                {
-                    quiz: quizId,
-                    rating: ratingValue,
-                    comments: commentValue,
-                },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-
-            alert('Rating submitted successfully!');
-            setSubmittedReviews((prev) => ({
-                ...prev,
-                [quizId]: {
-                    rating: ratingValue,
-                    comments: commentValue,
-                },
-            }));
-        } catch (err) {
-            setError(
-                err.response?.data?.detail ||
-                'An error occurred while submitting the rating.'
-            );
-            console.log('Review error data:', err.response?.data);
-        }
-    };
+        fetchArchivedQuizzes();
+    }, [token]);
 
     return (
         <div>
@@ -138,101 +151,114 @@ const MyArchive = () => {
                 <button id="profileButton" onClick={() => navigate('/Profile')}>
                     <img className="userImg" src={user_icon} alt="user_icon" />
                 </button>
+                {userRole !== null && <p className="username">{localStorage.getItem('username')}</p>}
             </div>
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
 
             <div className="quizzes">
-                {archivedQuizzes.map((quiz) => {
-                    const alreadyReviewed = submittedReviews[quiz.id] !== undefined;
-
-                    return (
-                        <div className="arhivirani-kviz" key={quiz.id}>
-                            <div className="nazivKviza">{quiz.title}</div>
-                            <div className="opisKviza">
-                                <p className="opis">{quiz.description}</p>
-                            </div>
-                            <div className="arhivirane-informacije">
-                                <p>Category: {quiz.category}</p>
-                                <p>Difficulty: {quiz.difficulty}</p>
-                                <p>Start: {new Date(quiz.start_time).toLocaleString()}</p>
-                                <p>
-                                    Deadline:{' '}
-                                    {new Date(quiz.registration_deadline).toLocaleString()}
-                                </p>
-                            </div>
-
-                            {alreadyReviewed ? (
-                                <div className="already-rated">
-                                    <p>
-                                        <strong>Your rating:</strong>{' '}
-                                        {submittedReviews[quiz.id].rating}
-                                    </p>
-                                    <p>
-                                        <strong>Your comments:</strong>{' '}
-                                        {submittedReviews[quiz.id].comments}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="rating">
-                                    <div className="star-rating">
-                                        {[...Array(5)].map((_, index) => {
-                                            const ratingValue = index + 1;
-
-                                            return (
-                                                <FaStar
-                                                    key={ratingValue}
-                                                    size={24}
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        color:
-                                                            ratingValue <=
-                                                            (ratings[quiz.id] || hover[quiz.id] || 0)
-                                                                ? '#ffc107'
-                                                                : '#e4e5e9',
-                                                    }}
-                                                    title={ratingDescriptions[ratingValue - 1]}
-                                                    onClick={() =>
-                                                        handleRatingChange(quiz.id, ratingValue)
-                                                    }
-                                                    onMouseEnter={() =>
-                                                        setHover((prev) => ({
-                                                            ...prev,
-                                                            [quiz.id]: ratingValue,
-                                                        }))
-                                                    }
-                                                    onMouseLeave={() =>
-                                                        setHover((prev) => ({
-                                                            ...prev,
-                                                            [quiz.id]: 0,
-                                                        }))
-                                                    }
-                                                />
-                                            );
-                                        })}
-                                    </div>
-
-                                    <label>Comments:</label>
-                                    <textarea
-                                        placeholder="Your thoughts on this quiz"
-                                        value={comments[quiz.id] || ''}
-                                        onChange={(e) =>
-                                            handleCommentChange(quiz.id, e.target.value)
-                                        }
-                                    />
-
-                                    <button
-                                        id="submit"
-                                        onClick={() => handleSubmitRating(quiz.id)}
-                                    >
-                                        Submit Rating
-                                    </button>
-                                </div>
-                            )}
+                {archivedQuizzes.map((quiz) => (
+                    <div className="arhivirani-kviz" key={quiz.id}>
+                        <div className="nazivKviza">{quiz.title}</div>
+                        <div className="opisKviza">
+                            <p className="opis">{quiz.description}</p>
                         </div>
-                    );
-                })}
+                    </div>
+                ))}
             </div>
+
+            {showQuizPopup && (
+                <div className="popupOverlay">
+                    <div className="popupContent">
+                        <h3 id='addQuizText'>Add a New Quiz</h3>
+                        <form onSubmit={handleQuizSubmission}>
+                        <input
+                                type="text"
+                                id='quizInput'
+                                placeholder="Quiz Title"
+                                required
+                                value={quizTitle}
+                                onChange={(e) => setQuizTitle(e.target.value)}
+                            />
+                            <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+                                <option value="">Select category</option>
+                                <option value="general_knowledge">General knowledge</option>
+                                <option value="music">Music</option>
+                                <option value="sports">Sports</option>
+                                <option value="other">Other</option>
+                            </select>
+
+                            <GoogleAutocomplete onLocationSelect={setPlaceDetails}/>
+
+                            <input
+                                type="number"
+                                id='quizInput'
+                                placeholder="Max Teams"
+                                required
+                                value={maxTeams}
+                                onChange={(e) => setMaxTeams(e.target.value)}
+                            />
+                            <input
+                                type="number"
+                                id='quizInput'
+                                placeholder="Fee"
+                                required
+                                value={fee}
+                                onChange={(e) => setFee(e.target.value)}
+                            />
+                            <p>Quiz start time</p>
+                            <input
+                                type="datetime-local"
+                                id='quizInput'
+                                placeholder="Start Time"
+                                required
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                            />
+                            <input
+                                type="number"
+                                id='quizInput'
+                                placeholder="Duration"
+                                required
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                            />
+                            <p>Registration deadline</p>
+                            <input
+                                type="datetime-local"
+                                id='quizInput'
+                                placeholder="Registration deadline"
+                                required
+                                value={registration_deadline}
+                                onChange={(e) => setRegistration_deadline(e.target.value)}
+                            />
+                            <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} required>
+                                <option value="">Select difficulty</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                            <textarea
+                                placeholder="Description"
+                                required
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            ></textarea>
+                            <input
+                                type="text"
+                                id='quizInput'
+                                placeholder="Prizes"
+                                required
+                                value={prizes}
+                                onChange={(e) => setPrizes(e.target.value)}
+                            />
+                            <button type="submit" id='quizButtons'>Submit Quiz</button>
+                            <button type="button" id='quizButtons' onClick={() => setShowQuizPopup(false)}>Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
             <div className="navigacija">
                 <div className="buttons">
@@ -257,11 +283,11 @@ const MyArchive = () => {
                     >
                         Maps
                     </button>
-                    {userRole === 'quizmaker' && (
-                        <button id="navButtons" onClick={() => navigate('/add-quiz')}>
+                    {userRole === 'quizmaker' || userRole === 'admin' ? (
+                        <button id="navButtons" onClick={() => setShowQuizPopup(true)}>
                             Add Quiz
                         </button>
-                    )}
+                    ) : null}
                 </div>
                 <div className="contactButton">
                     <button id="contacts" onClick={() => navigate('/contacts')}>

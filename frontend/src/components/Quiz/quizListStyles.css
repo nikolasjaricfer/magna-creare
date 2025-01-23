@@ -14,10 +14,12 @@
     box-sizing: border-box;
 }
 
-.username {
+.usernameHome {
     margin-top: 5%;
-    font-size: 14px;
+    font-size: 25px;
     color: #ffffff;
+    margin-right: 3.7vw;
+    margin-top: 110px;
   }
 
 .searchBar {
@@ -385,5 +387,383 @@ button:hover {
     border-radius: 5px;
     cursor: pointer;
     margin-top: 20px;
+}
+
+
+@media (max-width: 481px){
+    .homeTop {    
+        position: fixed;
+        top: 0px;
+        z-index: 2;
+        display: flex;
+        align-items: center; /* Vertically centers content */
+        justify-content: space-between; /* Creates spacing between elements */
+        background-color: #531b70;
+        height: 15vw;
+        width: 100vw;
+        padding: 0 2vw; /* Adds some padding on the sides */
+        box-sizing: border-box;
+    }  
+
+    .username {
+        margin-top: 10%;
+        font-size: 13px;
+        color: #ffffff;
+      }
+
+      .searchBar {
+        display: flex;
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Centers both search bar and dropdown */
+        justify-content: center;
+        width: 100%;
+        gap: 1vw; /* Adds spacing between the search bar and dropdown */
+    }
+    
+    #searchbar {
+        padding: 0.3%; /* Adds space inside the input */
+        border-radius: 25px; /* Smooth rounded edges */
+        height: 30px;
+        width: 70%; /* Adjust the width of the search bar */
+        font-size: 16px; /* Responsive font size */
+        border: 1px solid #ccc; /* Adds a border to the input */
+        outline: none; /* Removes default outline */
+    }
+    
+    #searchbar:hover {
+        background-color: rgba(81,37,105,255);
+    }
+
+
+    .filterDropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .dropdownButton {
+        background-color: #531b70;
+        color: white;
+        margin-left: 8px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        border: 1px solid #ccc; /* Adds a border to the input */
+    
+    }
+    
+    .dropdownButton:hover {
+        background-color: rgba(81,37,105,255);
+    }
+    
+    /* Hide dropdown content initially */
+    .dropdownContent {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 250px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        z-index: 1;
+        padding: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Show dropdown content when hovering over .filterDropdown */
+    .filterDropdown:hover .dropdownContent {
+        display: block;
+    }
+    
+    
+    
+    .filterSection {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px; /* Space between items */
+        align-items: flex-start; /* Aligns items to the top-left */
+        justify-content: flex-start; /* Aligns everything to the left */
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        margin-top: 10px;
+    }
+    
+    .divider {
+        border-top: 1px solid #ccc; /* Adds a light grey line as divider */
+        margin: 10px 0; /* Adds space above and below the divider */
+    }
+    
+    
+    .filterSection label {
+        align-items: center;
+        font-size: 15px; /* Adjust font size */
+        gap: 8px; /* Space between text and checkbox */
+        white-space: nowrap; /* Prevents text from wrapping */
+        display: block; /* Forces each label to appear on a new line */
+        margin-bottom: 5px; /* Adds space between labels */
+    }
+    
+    .filterSection h4 {
+        margin-bottom: 20px; /* Adds space below the <h4> */
+    }
+    
+    .filterSection input[type="checkbox"] {
+        width: 15px; /* Adjust checkbox size */
+        height: 15px;
+        cursor: pointer;
+    }
+    
+    #teamName{
+        width: 60%;
+    }
+    
+    #membersCount{
+        width: 60%;
+    }
+    
+    
+    
+    
+    
+    
+    
+    #profileButton{
+        background-color: white;
+        width: 12vw;
+        height: 7vw;
+        padding: 10px 15px;
+        cursor: pointer;
+        position: absolute;
+        right: 5vw;
+        color: black;
+    }
+    
+    p{
+        margin: 0;
+    }
+    .userImg{
+    
+        width: 5vw;
+        height: 5vw
+    }
+    
+    #profileButton:hover{
+        background-color: rgba(81,37,105,255);
+    }
+    
+    .ime{
+        font-size: 18px;
+        color: white;
+        margin-left: 1%;
+    
+    }
+    
+    .navigacija{    
+        position: fixed;
+        top: 7vw;
+        border-radius: 30px;
+        background-color: transparent;
+        width: 100%;
+        height: 10%; /* Ensure it takes up the full viewport height */
+        overflow-y: hidden; /* Enable vertical scrolling if content overflows */
+        overflow-x: hidden;
+        margin-top: 20px;
+        margin-left: 1px;
+    
+    }
+    
+    
+    
+    .buttons{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        text-align: center;
+    
+    }
+    
+    #adminText{
+        margin-top: 5%;
+        font-size: 1.3vw;
+        color: white;
+        font-weight: bold;
+    }
+    
+    #navButtons{
+        margin-top: 5%;
+        width: 80%;
+        height: 25px;
+        font-size: 16px;
+    }
+    
+    #navButtons.active {
+        background-color: white; /* Highlight color */
+        color: #531b70;
+        font-weight: bolder;
+        width: 81%;
+        height: 5vw;
+        box-shadow: 0 0 8px #ae4bdf, 0 0 18px #ae4bdf, 0 0 28px #ae4bdf;
+    }
+    
+    #quizButtons{
+        font-size: 1.2vw;
+        height: 2vw;
+    
+    }
+    
+    #quizInput{
+        width: 50vw;
+        height: 2vw;
+        font-size: 1.3vw;
+    }
+    
+    .contactButton{
+        height: 6vw;
+    }
+    #contacts{
+        margin-top: 5%;
+        width: 80%;
+        height: 25px;
+        font-size: 16px;
+    }
+    
+    #contacts:hover{
+        background-color: rgba(81,37,105,255);
+    }
+    
+    .locationInput {
+      width: 65%;
+      max-width: 400px; /* Adjust width as needed */
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 50px;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      transition: border-color 0.3s ease;
+      height: 37px;
+    }
+    
+    
+    .locationInput:hover {
+        animation: pulse 1s infinite;
+      
+      }
+      
+    
+    
+    .quizzes{
+        padding-top: 80px;
+        position: absolute;
+        height: 70vw;
+        width: 90vw;
+        margin-left: 2%;
+        margin-top: 7%;
+    }
+    
+    .kviz{
+        background-color: #ca76f7;
+        position: absolute;
+        width: 50%;
+        margin: 2%;
+        border-radius: 40px;
+        height: 30%;
+        padding: 2%;
+    }
+    
+    
+    .popupOverlay{
+        position: absolute;
+        height: 100%;
+        width: 65%;
+        margin-left: 25%;
+        margin-top: 5%;
+    
+        display: flex;
+        justify-content: center;
+        font-size: 100%;
+    
+    }
+    
+    .popupContent{
+        margin-top: 7vw;
+    }
+    
+    textarea{
+        font-size: 16px;
+        width: 50vw;
+    }
+    
+    #addQuizText{
+        font-size: 16px;
+    }
+    
+    
+    button:hover {
+        animation: pulse 1s infinite;
+    }
+    
+    
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    
+    
+    #prijaviSe:disabled {
+        cursor: not-allowed;
+    }
+    
+    
+    
+    .popupOverlayInfo {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Ensure it appears above all other content */
+    }
+    
+    .popupContentInfo {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        width: 90%; /* For smaller screens */
+        position: relative;
+        z-index: 1010; /* Ensure it stays above the overlay */
+    }
+    
+    .closePopupInfo {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    #quizButtons{
+        font-size: 16px;
+        height: 25px;
+    }
+
+
+    
 }
 
