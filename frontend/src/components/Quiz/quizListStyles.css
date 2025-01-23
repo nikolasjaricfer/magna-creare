@@ -14,6 +14,12 @@
     box-sizing: border-box;
 }
 
+.username {
+    margin-top: 5%;
+    font-size: 14px;
+    color: #ffffff;
+  }
+
 .searchBar {
     display: flex;
     flex-direction: column; /* Stack elements vertically */

@@ -1,5 +1,5 @@
 //"use client";
-
+import { Navigate, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import GoogleAutocomplete from './GoogleAutocomplete';
@@ -11,6 +11,8 @@ import {
 import './mapsStyles.css';
 
 const MapsPage = () => {
+
+  const navigate = useNavigate();
 
   const PoiMarkers = (props) => {
     return (
@@ -107,6 +109,9 @@ const MapsPage = () => {
   return (
     <div className='maps'>
       <div className='filterDiv'>
+        <button className="home-button" id='changeButton' onClick={() => navigate('/Quiz')}>
+          Go to home page
+        </button>
         <div className='lokacija'>
           <h3>My location:</h3>
           <GoogleAutocomplete onLocationSelect={(e) => {console.log(e); 
@@ -114,7 +119,7 @@ const MapsPage = () => {
                                                         localStorage.setItem('myLng', e.coordinates.lng)}}/>
         </div>
         <div className='kvizovi'>
-          <h3 className='distance'>My distance to selected location: {distance}</h3>
+          <h3 className='distance'>My distance to selected location: {distance} km.</h3>
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
           <div className='kvizoviList'>
           {quizzes.map((quiz) => (
@@ -124,11 +129,11 @@ const MapsPage = () => {
                             <p className='opis'>{quiz.description}</p>
                         </div>
                         <div className='informacije'>
-                            <p>Category: {quiz.category}</p>
-                            <p>Difficulty: {quiz.difficulty}</p>
-                            <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
-                            <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                            <p>Duration: {quiz.duration} mins</p>                         
+                            <p><b>Category: </b> {quiz.category}</p>
+                            <p><b>Difficulty: </b> {quiz.difficulty}</p>
+                            <p><b>Start time: </b> {new Date(quiz.start_time).toLocaleString()}</p>
+                            <p><b>Registration deadline: </b> {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                            <p><b>Duration: </b> {quiz.duration} mins</p>                         
                         </div>
                         {userRole !== 'admin' & userRole !==  null?
                         <div className='prijava'>

@@ -1,23 +1,51 @@
 .filterDiv{
     position: fixed;
-    top: 7vw;
+    top: 1vw;
+    bottom: 1vw;
     border-radius: 30px;
     background-color: #531b70;
-    left: 5vw;
+    left: 1vw;
     width: 25vw;
-    height: 80vh;
+    height: 95%;
     z-index: 1;
     padding-left: 5%;
+    overflow-y: auto;
 
 }
 .lokacija{
     width: 100%;
+    position: relative;
+    color: white;
+}
+
+.distance {
+    color: white;
+}
+
+.kvizoviText {
+    color: white;
 }
 
 .kvizovi{
     width: 100%;
     position: relative;
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    overflow-x: auto;
+    padding-right: 10px;
+}
+
+
+  
+
+#prijaviSe {
+    width: 45%;
+    height: 30%;
+    font-size: 100%;
+}
+
+.informacije p{
+    font-size: x-small;
+    position: relative;
 }
 
 .kvizovi::-webkit-scrollbar {
@@ -46,3 +74,8 @@
     top: 0vw;
 
     }
+
+
+.kviz {
+    width: 100%;
+}

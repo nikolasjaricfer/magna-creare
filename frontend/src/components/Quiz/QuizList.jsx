@@ -532,6 +532,8 @@ const QuizList = () => {
                 <button id='profileButton' onClick={() => handleNavigation('/Profile')}>
                 {userRole === null ? "Register" : <img className='userImg' src={user_icon} alt='user_icon' />}
                 </button>
+                    
+                {userRole !== null && <p className="username">{localStorage.getItem('username')}</p>}
             </div>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -581,14 +583,7 @@ const QuizList = () => {
                         <label>No <input type="checkbox" className="is_league" value="false" 
                         onChange={e => handleCheckboxChange(e, 'is_league')}/></label>
                     </div>
-                    <div className="divider"></div>
-                    <div className="filterSection">
-                        <h4>Distance</h4>
-                        <label>Closest <input type="checkbox" className="distance" value="closest" 
-                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
-                        <label>Farthest <input type="checkbox" className="distance" value="farthest" 
-                        onChange={e => handleCheckboxChange(e, 'distance')}/></label>
-                    </div>
+                    
                 </div>
             </div>
                 {quizzes.map((quiz) => (
@@ -599,11 +594,11 @@ const QuizList = () => {
                             <p className='opis'>Location: {locDict[quiz.location]}</p>
                         </div>
                         <div className='informacije'>
-                            <p>Category: {quiz.category}</p>
-                            <p>Difficulty: {quiz.difficulty}</p>
-                            <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
-                            <p>Registration deadline: {new Date(quiz.registration_deadline).toLocaleString()}</p>
-                            <p>Duration: {quiz.duration} mins</p>                         
+                            <p><b>Category:</b> {quiz.category}</p>
+                            <p><b>Difficulty:</b> {quiz.difficulty}</p>
+                            <p><b>Start time:</b> {new Date(quiz.start_time).toLocaleString()}</p>
+                            <p><b>Registration deadline:</b> {new Date(quiz.registration_deadline).toLocaleString()}</p>
+                            <p><b>Duration:</b> {quiz.duration} mins</p>                         
                         </div>
                         {userRole !== 'admin' & userRole !==  null?
                         <div className='prijava'>
@@ -922,7 +917,6 @@ const QuizList = () => {
 
                     )}
                 </div>
-                <input className="locationInput" type="text" placeholder="Insert your location" />
 
 
                     <div className='contactButton'>
