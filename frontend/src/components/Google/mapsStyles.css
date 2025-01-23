@@ -5,10 +5,10 @@
     border-radius: 30px;
     background-color: #531b70;
     left: 1vw;
-    width: 25vw;
+    width: 35vw;
     height: 95%;
     z-index: 1;
-    padding-left: 5%;
+    padding-left: 2%;
     overflow-y: auto;
 
 }
@@ -34,6 +34,20 @@
     padding-right: 10px;
 }
 
+.pac-target-input{
+    width: 90%;
+    font-size: 1vw;
+    height: 3vw;
+}
+
+.kvizMap{
+    background-color: #ca76f7;
+    position: relative;
+    margin: 2%;
+    border-radius: 30px;
+    height: 30%;
+    width: 90%;
+}
 
   
 

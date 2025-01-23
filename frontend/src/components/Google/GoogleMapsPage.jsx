@@ -123,7 +123,7 @@ const MapsPage = () => {
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
           <div className='kvizoviList'>
           {quizzes.map((quiz) => (
-                    <div className='kviz' key={quiz.id}>
+                    <div className='kvizMap' key={quiz.id}>
                         <div className='nazivKviza'>{quiz.title}</div>
                         <div className='opisKviza'>
                             <p className='opis'>{quiz.description}</p>
