@@ -114,7 +114,7 @@ const MapsPage = () => {
                                                         localStorage.setItem('myLng', e.coordinates.lng)}}/>
         </div>
         <div className='kvizovi'>
-          <h3 className='distance'>My distance to selected location: {distance}</h3>
+          <h3 className='distance'>My distance to selected location: {distance}km</h3>
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
           <div className='kvizoviList'>
           {quizzes.map((quiz) => (
