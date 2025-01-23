@@ -108,22 +108,22 @@ const MapsPage = () => {
     <div className='maps'>
       <div className='filterDiv'>
         <div className='lokacija'>
-          <h3>My location:</h3>
+          <h3 className='distance'>My location:</h3>
           <GoogleAutocomplete onLocationSelect={(e) => {console.log(e); 
                                                         localStorage.setItem('myLat', e.coordinates.lat);
                                                         localStorage.setItem('myLng', e.coordinates.lng)}}/>
         </div>
-        <div className='kvizovi'>
+        <div className='kvizoviMap'>
           <h3 className='distance'>My distance to selected location: {distance}km</h3>
           <h3 className='kvizoviText'>Quizzes on selected location:</h3>
-          <div className='kvizoviList'>
+          <div className='kvizoviListMap'>
           {quizzes.map((quiz) => (
-                    <div className='kviz' key={quiz.id}>
-                        <div className='nazivKviza'>{quiz.title}</div>
-                        <div className='opisKviza'>
+                    <div className='kvizMap' key={quiz.id}>
+                        <div className='nazivKvizaMap'>{quiz.title}</div>
+                        <div className='opisKvizaMap'>
                             <p className='opis'>{quiz.description}</p>
                         </div>
-                        <div className='informacije'>
+                        <div className='informacijeMap'>
                             <p>Category: {quiz.category}</p>
                             <p>Difficulty: {quiz.difficulty}</p>
                             <p>Start time: {new Date(quiz.start_time).toLocaleString()}</p>
