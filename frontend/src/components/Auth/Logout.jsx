@@ -11,6 +11,7 @@ const Logout = () => {
         localStorage.removeItem('id');
         localStorage.removeItem('role');
         localStorage.removeItem('username');
+        localStorage.removeItem('appliedQuizzes');
 
         // Redirect to login page
         navigate('/login');

@@ -26,6 +26,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('id');
         localStorage.removeItem('role');
         localStorage.removeItem('username');
+        localStorage.removeItem('appliedQuizzes');
+        localStorage.removeItem('myLat');
+        localStorage.removeItem('myLng');
         setIsAuthenticated(false); // Update state, triggering re-renders
     };
 
