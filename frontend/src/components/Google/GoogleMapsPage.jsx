@@ -9,9 +9,13 @@ import {
   Pin
 } from '@vis.gl/react-google-maps';
 import './mapsStyles.css';
+import { useNavigate, Navigate } from 'react-router-dom';
+
 
 const MapsPage = () => {
 
+  const navigate = useNavigate();
+  
   const PoiMarkers = (props) => {
     return (
       <>
@@ -107,6 +111,7 @@ const MapsPage = () => {
   return (
     <div className='maps'>
       <div className='filterDiv'>
+      <button className='goToHomePage'id='changeButton' onClick={()=>navigate('/Quiz')}> Go to home page</button>
         <div className='lokacija'>
           <h3 className='distance'>My location:</h3>
           <GoogleAutocomplete onLocationSelect={(e) => {console.log(e); 
