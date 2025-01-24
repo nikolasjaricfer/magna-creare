@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
 
-    baseURL: 'http://localhost:8000/',  // Change to your Django API URL
+    baseURL: 'https://quiz-finder.onrender.com/',  // Change to your Django API URL
     withCredentials:true
     //baseURL: 'https://quiz-finder.onrender.com/',
 
@@ -35,7 +35,7 @@ api.interceptors.response.use(
   
         try {
           const refreshToken = localStorage.getItem('refresh_token');
-          const response = await axios.post(`http://localhost:8000/api/token/refresh/`, {
+          const response = await axios.post(`https://quiz-finder.onrender.com/api/token/refresh/`, {
             refresh: refreshToken,
           });
   

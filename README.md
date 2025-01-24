@@ -1,12 +1,9 @@
-<<<<<<< HEAD
-=======
 # magna-creare
 Magna Creare is a team of young developers making a Quiz Finder application that helps people find or organize pub quizzes..
 
->>>>>>> dfc388c32123950690dee1caa0e41345205251fc
 # Programsko inženjerstvo
 
-> Quiz Finder je full-stack web aplikacija koja omogućava korisnicima da pronađu i sudjeluju u pub kvizovima. Aplikacija omogućava različite uloge korisnika—organizatora, sudionika, administratora i neregistriranih korisnika koji mogu samo pregledavati kvizove. Također integrira Google Maps API za prikazivanje lokacija kvizova.
+Quiz Finder je full-stack web aplikacija koja omogućava korisnicima da pronađu i sudjeluju u pub kvizovima. Aplikacija omogućava različite uloge korisnika—organizatora, sudionika, administratora i neregistriranih korisnika koji mogu samo pregledavati kvizove. Također integrira Google Maps API za prikazivanje lokacija kvizova.
 
 # Opis projekta
 Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva Sveučilišta u Zagrebu. 
@@ -15,7 +12,7 @@ Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Prog
 
 **Motivacija**: Potrebna je platforma koja pomaže korisnicima da lako pronađu pub kvizove u svom području, s mogućnostima za registraciju, sudjelovanje i organizaciju događanja. 
 
-> Naučeno: Kroz ovaj projekt stekli smo iskustvo u razvoju full-stack web aplikacija, radu s bazama podataka i vanjskim API-ima, te postavljanju OAuth2 autentifikacije za siguran pristup.
+Naučeno: Kroz ovaj projekt stekli smo iskustvo u razvoju full-stack web aplikacija, radu s bazama podataka i vanjskim API-ima, te postavljanju OAuth2 autentifikacije za siguran pristup.
 
 # Funkcijski zahtjevi
 - **Registracija i prijava**: Omogućiti korisnicima da se registriraju i prijave koristeći OAuth2 ili društvene logine.
@@ -33,7 +30,7 @@ Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Prog
 1. **Backend (Django)**:
    - Instalirajte potrebne pakete:  
      ```
-     pip install -r requirements.txt
+     pip install -r ..\requirements.txt
      ```
    - Pokrenite razvojni server:  
      ```
@@ -46,7 +43,7 @@ Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Prog
      ```
    - Pokrenite razvojni server:  
      ```
-     npm start
+     npm run dev
      ```
 
 # Članovi tima

@@ -58,7 +58,7 @@ SECRET_KEY = "django-insecure-nma=xi6x2p-crjg^ifqqkapyu1qjd0l=+wn)-rijk_o%$!k3w_
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -235,6 +235,6 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://quizfinder.onrender.com",
-    "http://localhost:3000",  # Ako koristiš lokalni frontend za testiranje
+    #"http://localhost:3000",  # Ako koristiš lokalni frontend za testiranje
     "https://quiz-finder.onrender.com",
 ]

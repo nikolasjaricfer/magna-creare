@@ -67,7 +67,7 @@ const Register = () => {
         var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
         uri = uri + 'client_id=e1f95fb2-8257-4b4b-bb1a-f9cad552128e'
         uri = uri + '&response_type=code id_token'
-        uri = uri + '&redirect_uri=http://localhost:3000/regComplete'
+        uri = uri + '&redirect_uri=https://quizfinder.onrender.com/regComplete'
         uri = uri + '&scope=openid profile email User.Read'
         uri = uri + '&nonce=${nonce}'
         //uri = uri + '&response_mode=query'
