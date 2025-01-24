@@ -63,7 +63,6 @@ const Register = () => {
         //navigate('/auth/microsoft/login');
         window.location.assign('https://quizfinder.onrender.com/api/auth/microsoft/login/');
         //window.location.assign('http://localhost:8000/auth/microsoft/login/');
-        //window.location.assign('http://localhost:8000/auth/microsoft/login/');
         var uri = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
         uri = uri + 'client_id=e1f95fb2-8257-4b4b-bb1a-f9cad552128e'
         uri = uri + '&response_type=code id_token'
