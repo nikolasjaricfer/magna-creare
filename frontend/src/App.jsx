@@ -17,7 +17,7 @@ import MyArchive from './components/MyArchive/MyArchive';
 const App = () => {
     return (
         <AuthProvider>
-            <APIProvider apiKey={"AIzaSyCcuuQun2cil087pFWnlU7x4BxRiZPXQws"}>
+            <APIProvider apiKey={import.meta.env.VITE_GOOGLE_KEY}>
                 <Router>
                     <Routes>
                         <Route path="/" element={<Login/>} /> 
