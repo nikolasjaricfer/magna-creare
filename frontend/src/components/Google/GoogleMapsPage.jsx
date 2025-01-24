@@ -121,13 +121,14 @@ const handleClosePopup = () => {
     const loadPins = async () => {
       setToken(localStorage.getItem('token'));
   
-      const response = await api.get('api/locations/',
+      const response = await api.get('api/locations/active-only/',
         {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         }
       );
+      console.log(response.data);
       setLocations(response.data);
     }
 

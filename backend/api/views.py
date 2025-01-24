@@ -579,6 +579,32 @@ class LocationViewSet(viewsets.ModelViewSet):
         return Response(data, status=200)
     
 
+
+    @action(detail=False, methods=['get'], url_path='active-only')
+    def activeOnly(self, request):
+        """
+        Custom endpoint to return all locations that have at least one active quiz
+        """    
+        current_time = timezone.now()
+        activeQuizzesObject = Quiz.objects.filter(start_time__gte=current_time).values('location_id')
+        activeQuizzesId = list(set([i['location_id'] for i in activeQuizzesObject]))
+        activeLocations = Location.objects.filter(id__in=activeQuizzesId).all()
+        
+        res = [
+            {
+                'id': loc.id,
+                'name': loc.name,
+                'latitude': loc.latitude,
+                'longitude': loc.longitude,
+                'address': loc.address,
+                'place_id': loc.place_id
+            } for loc in activeLocations
+        ]
+        
+        return Response(res, status=200)
+
+    
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 

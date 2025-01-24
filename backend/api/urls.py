@@ -47,7 +47,6 @@ urlpatterns = [
     path('auth/', include('dj_rest_auth.urls')),  
     path('auth/registration/', include('dj_rest_auth.registration.urls')), 
     path('auth/social/login/microsoft/', CustomMicrosoftLoginView.as_view(), name='microsoft_login'),
-    #path('auth/microsoft/login/', CustomMicrosoftLoginView.as_view(), name='microsoft_login'),## moje
     path('auth/social/callback/microsoft/', CustomMicrosoftLoginView.as_view(), name='microsoft_callback'),##
     path('search/', SearchView.as_view(), name='search'),
 ]
